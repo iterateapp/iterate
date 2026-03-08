@@ -26,28 +26,19 @@ export default async function InterviewPage({ params }: Props) {
 
   if (interview.status === 'EXPIRED') {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">このインタビューの有効期限が切れています。</p>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <p className="text-zinc-400">このインタビューの有効期限が切れています。</p>
       </div>
     );
   }
 
   if (interview.status === 'COMPLETED') {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">このインタビューはすでに完了しています。ありがとうございました。</p>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <p className="text-zinc-400">このインタビューはすでに完了しています。ありがとうございました。</p>
       </div>
     );
   }
 
-  return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <header className="border-b bg-white px-6 py-4">
-        <h1 className="text-lg font-semibold text-gray-900">ユーザーインタビュー</h1>
-      </header>
-      <main className="flex flex-1 items-center justify-center p-6">
-        <InterviewRoom interviewId={interviewId} />
-      </main>
-    </div>
-  );
+  return <InterviewRoom interviewId={interviewId} />;
 }

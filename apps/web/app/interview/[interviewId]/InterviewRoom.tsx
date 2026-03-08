@@ -1,6 +1,7 @@
 'use client';
 
-import { Mic, MicOff, PhoneOff, Play } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Mic, MicOff, PhoneOff, Play, Video, VideoOff } from 'lucide-react';
 import { useInterviewCall } from './useInterviewCall';
 
 interface Props {
@@ -11,85 +12,230 @@ export function InterviewRoom({ interviewId }: Props) {
   const { callState, isMuted, elapsed, error, transcript, audioRef, startCall, endCall, toggleMute, formatTime } =
     useInterviewCall(interviewId);
 
-  return (
-    <div className="w-full max-w-lg rounded-2xl bg-white shadow-lg overflow-hidden">
-      {/* biome-ignore lint/a11y/useMediaCaption: audio-only remote stream */}
-      <audio ref={audioRef} autoPlay />
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [cameraEnabled, setCameraEnabled] = useState(false);
+  const [cameraError, setCameraError] = useState(false);
+  const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
 
-      {/* Header */}
-      <div className="border-b px-6 py-4 text-center">
-        <h2 className="font-medium text-gray-900">AIインタビュアー</h2>
-        {callState === 'connected' && (
-          <div className="mt-1 flex items-center justify-center gap-2">
-            <span className="text-sm text-gray-500">通話中 {formatTime(elapsed)}</span>
-            <div className="flex items-center gap-0.5">
-              {[0,1,2,3,4,5].map((i) => (
-                <div
-                  key={i}
-                  className="w-0.5 rounded-full bg-blue-500 animate-pulse"
-                  style={{ height: `${8 + (i % 3) * 4}px`, animationDelay: `${i * 0.08}s` }}
+  // Start camera when user clicks start (or when connected)
+  useEffect(() => {
+    if (callState === 'connected' || callState === 'connecting') {
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: false })
+        .then((stream) => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            setCameraEnabled(true);
+          }
+        })
+        .catch(() => setCameraError(true));
+    }
+    // Cleanup camera on end
+    if (callState === 'ended' || callState === 'idle') {
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        for (const track of stream.getTracks()) track.stop();
+        videoRef.current.srcObject = null;
+        setCameraEnabled(false);
+      }
+    }
+  }, [callState]);
+
+  // Detect agent speaking from transcript (any new non-final agent segment)
+  useEffect(() => {
+    const lastEntry = transcript.at(-1);
+    if (lastEntry?.speaker === 'agent' && !lastEntry.isFinal) {
+      setIsAgentSpeaking(true);
+    } else {
+      const timer = setTimeout(() => setIsAgentSpeaking(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [transcript]);
+
+  const lastAgentText = transcript.filter((t) => t.speaker === 'agent' && t.isFinal).at(-1)?.text ?? '';
+  const lastUserText = transcript.filter((t) => t.speaker === 'user').at(-1)?.text ?? '';
+
+  if (callState === 'idle') {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-8 px-4">
+        {/* biome-ignore lint/a11y/useMediaCaption: audio-only */}
+        <audio ref={audioRef} autoPlay />
+        <div className="text-center space-y-3">
+          <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800">
+            <svg viewBox="0 0 40 40" fill="none" className="h-10 w-10">
+              {/* Pulsing radar arcs — iterate brand icon */}
+              {[28, 20, 12].map((r, i) => (
+                <path
+                  key={r}
+                  d={`M ${20 - r * Math.cos(Math.PI / 6)} ${20 - r * Math.sin(Math.PI / 6)} A ${r} ${r} 0 0 1 ${20 + r * Math.cos(Math.PI / 6)} ${20 - r * Math.sin(Math.PI / 6)}`}
+                  stroke="white"
+                  strokeWidth={i === 0 ? 1.5 : i === 1 ? 2 : 2.5}
+                  strokeLinecap="round"
+                  opacity={0.6 + i * 0.2}
                 />
               ))}
-            </div>
+            </svg>
           </div>
-        )}
+          <h1 className="text-2xl font-semibold text-white">AIインタビュアー</h1>
+          <p className="text-zinc-400 text-sm max-w-sm">
+            AIがいくつかの質問をお聞きします。マイクとカメラの使用を許可してください。
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={startCall}
+          className="flex items-center gap-2.5 rounded-full bg-white px-8 py-4 text-zinc-900 font-semibold text-base hover:bg-zinc-100 transition-colors"
+        >
+          <Play className="h-5 w-5" />
+          インタビューを開始
+        </button>
+      </div>
+    );
+  }
+
+  if (callState === 'ended') {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-6 px-4">
+        <audio ref={audioRef} autoPlay />
+        <div className="text-center space-y-3">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800">
+            <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-white">インタビュー完了</h2>
+          <p className="text-zinc-400 text-sm">ご参加ありがとうございました。<br />回答は保存されました。</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (callState === 'error') {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-6 px-4">
+        <audio ref={audioRef} autoPlay />
+        <div className="text-center space-y-3">
+          <p className="text-red-400 text-sm">{error || '接続に失敗しました'}</p>
+          <button type="button" onClick={startCall}
+            className="rounded-full border border-zinc-700 px-6 py-2 text-sm text-white hover:bg-zinc-800 transition-colors">
+            再試行
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // connecting or connected states
+  return (
+    <div className="min-h-screen bg-zinc-950 flex flex-col">
+      {/* biome-ignore lint/a11y/useMediaCaption: audio-only */}
+      <audio ref={audioRef} autoPlay />
+
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-2">
+          {callState === 'connected' && (
+            <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+              録音中 {formatTime(elapsed)}
+            </span>
+          )}
+          {callState === 'connecting' && (
+            <span className="text-xs text-zinc-500">接続中...</span>
+          )}
+        </div>
       </div>
 
-      {/* Transcript */}
-      <div className="h-80 overflow-y-auto p-4 space-y-3">
-        {transcript.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-center text-gray-400 text-sm">
-            {callState === 'idle' && 'マイクを許可して、インタビューを開始してください。'}
-            {callState === 'connecting' && '接続中...'}
-            {callState === 'ended' && '終了しました。ご参加ありがとうございました。'}
-            {callState === 'error' && error}
-          </div>
-        ) : (
-          transcript.map((entry) => (
-            <div key={entry.id} className={`flex gap-2 ${entry.speaker === 'user' ? 'flex-row-reverse' : ''}`}>
-              <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
-                entry.speaker === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900'
-              } ${!entry.isFinal ? 'opacity-60' : ''}`}>
-                {entry.text}
-              </div>
+      {/* Main video area */}
+      <div className="flex flex-1 gap-4 px-6 pb-4 min-h-0">
+        {/* AI panel */}
+        <div className="flex-1 rounded-2xl bg-zinc-900 flex flex-col items-center justify-center relative overflow-hidden">
+          {/* Pulsing orb when AI is speaking */}
+          <div className={`relative flex items-center justify-center transition-all duration-300 ${isAgentSpeaking ? 'scale-110' : 'scale-100'}`}>
+            <div className={`absolute rounded-full bg-indigo-500/20 transition-all duration-700 ${isAgentSpeaking ? 'h-40 w-40 opacity-100' : 'h-24 w-24 opacity-0'}`} />
+            <div className={`absolute rounded-full bg-indigo-500/10 transition-all duration-1000 ${isAgentSpeaking ? 'h-56 w-56 opacity-100' : 'h-32 w-32 opacity-0'}`} />
+            <div className="relative h-20 w-20 rounded-full bg-zinc-800 flex items-center justify-center">
+              <svg viewBox="0 0 40 40" fill="none" className="h-10 w-10">
+                {[28, 20, 12].map((r, i) => (
+                  <path
+                    key={r}
+                    d={`M ${20 - r * Math.cos(Math.PI / 6)} ${20 - r * Math.sin(Math.PI / 6)} A ${r} ${r} 0 0 1 ${20 + r * Math.cos(Math.PI / 6)} ${20 - r * Math.sin(Math.PI / 6)}`}
+                    stroke="white"
+                    strokeWidth={i === 0 ? 1.5 : i === 1 ? 2 : 2.5}
+                    strokeLinecap="round"
+                    opacity={0.6 + i * 0.2}
+                  />
+                ))}
+              </svg>
             </div>
-          ))
-        )}
+          </div>
+          <p className="mt-4 text-zinc-500 text-sm">AIインタビュアー</p>
+          {/* Agent's latest text */}
+          {lastAgentText && (
+            <p className="absolute bottom-4 left-4 right-4 text-center text-white text-sm leading-relaxed bg-zinc-950/50 rounded-lg px-3 py-2">
+              {lastAgentText}
+            </p>
+          )}
+        </div>
+
+        {/* User camera panel */}
+        <div className="flex-1 rounded-2xl bg-zinc-900 flex flex-col items-center justify-center relative overflow-hidden">
+          {cameraEnabled ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className="h-full w-full object-cover rounded-2xl scale-x-[-1]"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-20 w-20 rounded-full bg-zinc-800 flex items-center justify-center">
+                {cameraError ? <VideoOff className="h-8 w-8 text-zinc-600" /> : <Video className="h-8 w-8 text-zinc-600" />}
+              </div>
+              <p className="text-zinc-600 text-sm">{cameraError ? 'カメラにアクセスできません' : 'カメラ準備中...'}</p>
+            </div>
+          )}
+          {/* User's latest text */}
+          {lastUserText && (
+            <p className="absolute bottom-4 left-4 right-4 text-center text-white text-sm leading-relaxed bg-zinc-950/50 rounded-lg px-3 py-2">
+              {lastUserText}
+            </p>
+          )}
+          {/* User label */}
+          <div className="absolute top-3 left-3 text-xs text-zinc-500 bg-zinc-950/50 rounded px-2 py-0.5">
+            あなた
+          </div>
+        </div>
       </div>
 
       {/* Controls */}
-      <div className="border-t p-4 flex items-center justify-center gap-4">
-        {callState === 'idle' && (
-          <button type="button" onClick={startCall}
-            className="flex items-center gap-2 rounded-full bg-green-500 px-6 py-3 text-white font-medium hover:bg-green-600 transition-colors">
-            <Play className="h-4 w-4" />
-            インタビューを開始
-          </button>
-        )}
-        {callState === 'connecting' && (
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-            接続中...
-          </div>
-        )}
+      <div className="flex items-center justify-center gap-4 pb-8">
         {callState === 'connected' && (
           <>
-            <button type="button" onClick={toggleMute}
-              className={`h-12 w-12 rounded-full flex items-center justify-center transition-colors ${
-                isMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <button
+              type="button"
+              onClick={toggleMute}
+              className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
+                isMuted ? 'bg-red-500 text-white' : 'bg-zinc-800 text-white hover:bg-zinc-700'
+              }`}
+            >
               {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </button>
-            <button type="button" onClick={endCall}
-              className="h-12 w-12 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
+            <button
+              type="button"
+              onClick={endCall}
+              className="h-14 w-14 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+            >
               <PhoneOff className="h-5 w-5" />
             </button>
           </>
         )}
-        {(callState === 'ended' || callState === 'error') && (
-          <button type="button" onClick={() => window.location.reload()}
-            className="rounded-full border px-6 py-2 text-sm text-gray-700 hover:bg-gray-50">
-            再接続
-          </button>
+        {callState === 'connecting' && (
+          <div className="flex items-center gap-2 text-zinc-500 text-sm">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            接続中...
+          </div>
         )}
       </div>
     </div>
