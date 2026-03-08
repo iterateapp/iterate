@@ -1,0 +1,12 @@
+{
+  "name": "@iterate/symphony",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "mise exec -- mix build",
+    "dev": "mise exec -- ./bin/symphony ./WORKFLOW.md --port 4000",
+    "lint": "mise exec -- mix lint",
+    "test": "mise exec -- mix test",
+    "setup": "mise exec -- mix setup"
+  }
+}

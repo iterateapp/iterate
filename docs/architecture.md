@@ -1,6 +1,6 @@
 # Iterate — アーキテクチャ設計
 
-> 3つの独立したマイクロサービスが、TOMLファイルで連携する設計
+> DBエンティティを中心に、AIが自動でループを回すプロダクト改善システム
 
 ---
 
@@ -11,233 +11,245 @@
 │  monorepo (Turborepo)                                     │
 │                                                           │
 │  apps/                                                    │
-│    discovery/    ← Phase 1: 仮説生成チャット               │
+│    discovery/    ← Phase 1: Insight検知・AI自動調査        │
 │    research/     ← Phase 2: AIインタビューアプリ            │
-│    action/       ← Phase 3: タスク生成・Linear連携          │
-│    web/          ← ダッシュボード（オプション）              │
+│    prd/          ← Phase 3: PRD自動生成サービス            │
+│    action/       ← Phase 4: タスク生成・Linear/GitHub連携  │
+│    experiment/   ← Phase 5: 実験追跡・Amplitude結果参照    │
+│    web/          ← ダッシュボード                          │
 │                                                           │
 │  packages/                                               │
-│    toml-schema/  ← 共通TOMLスキーマ定義                    │
+│    db/           ← Prismaスキーマ・マイグレーション         │
 │    types/        ← 共通型定義                             │
 └──────────────────────────────────────────────────────────┘
 ```
 
-各サービスは**独立してデプロイ・使用可能**。TOMLファイルがサービス間の唯一のインターフェース。
+各サービスは**共有PostgreSQL DBを通じて連携**する。Symphony（外部サービス）はLinearをポーリングしてGitHub PRを自動作成する。
 
 ---
 
-## Phase 1: Discovery（仮説生成）
+## DBエンティティ設計
 
-### 役割
-PMがAIと対話しながら、定量データをもとに仮説を立て、構造化する。
+### Organization / User / Product / Connection（初期セットアップ）
 
-### Input
-- Amplitude / Mixpanel / GA4 などのanalyticsデータ（API連携 or CSVアップロード）
-- PMの自由なテキスト（「このメトリクスが気になる」）
+```
+Organization
+  id, name, createdAt
 
-### Process
-- Chat UIでAIとの対話（壁打ち形式）
-- AIが問いかけ、PMが答えながら仮説を精緻化
-- 仮説が固まったら、インタビュー設計 or A-Zテスト設計を自動生成
+User
+  id, organizationId, email, role
 
-### Output
-- `hypothesis.toml`（Phase 2 または Phase 3へのインプット）
+Product
+  id, organizationId, name, description
 
-### Human in the loop
-- PMが仮説を修正・承認してからPhase 2に渡す
-
----
-
-## Phase 2: Research（AIインタビュー）
-
-### 役割
-`hypothesis.toml` を元に、AIが実ユーザーにインタビューを実施する。
-
-### Input
-- `hypothesis.toml`（Phase 1の出力）
-
-### Process
-- in-appポップアップ or メールでユーザーを招待
-- AIが会話形式でインタビューを実施（OpenAI Realtime API or テキストチャット）
-- 複数ユーザーの回答を定性データとして集約・分析
-
-### Output
-- `results.toml`（Phase 3へのインプット）
-
-### Human in the loop
-- PMが結果サマリーをレビュー・承認してからPhase 3に渡す
-
----
-
-## Phase 3: Action（タスク生成 → 自動実装）
-
-### 役割
-`results.toml` を元に実装タスクをLinearに登録し、Symphonyがそのタスクを拾ってコーディングエージェントに自動実装させる。
-
-### Input
-- `results.toml`（Phase 2の出力）
-
-### Process
-1. AIがインタビュー結果から改善案を生成
-2. RICE（Impact / Confidence / Effort）スコアでタスクを優先順位付け
-3. Linear APIを呼び出してタスクを作成
-4. **Symphony**（`~/dev/kanban` の改造版）がLinearをポーリングしてタスクを検知
-5. Symphonyがタスクごとに隔離されたワークスペースを作成し、コーディングエージェントを起動
-6. エージェントが実装 → PR作成 → レビュー待ち
-
-### Output
-- Linearのタスク（Symphonyが自動でピックアップ）
-- エージェントが生成したPR
-
-### Human in the loop
-- PMがタスクリストをレビュー・承認してからLinearに作成する
-- PR作成後はエンジニアがレビューして承認する
-
----
-
-## TOMLスキーマ定義
-
-### `hypothesis.toml`（Phase 1 → Phase 2）
-
-```toml
-[meta]
-id = "hyp-001"
-created_at = "2026-03-08T12:00:00Z"
-created_by = "pm@company.com"
-
-[trigger]
-source = "amplitude"                  # analytics data source
-metric = "tab_b_ctr"
-value = 0.008
-threshold = 0.05                      # 期待値より低い
-observation = "Tab BのCTRが期待値の6倍低い"
-
-[hypothesis]
-statement = "ユーザーがTab Bの存在に気づいていない可能性がある"
-type = "discovery"                    # discovery | validation | a_z_test
-
-[interview]
-goal = "UI視認性の問題を確認する"
-target_count = 50
-questions = [
-  "このページで普段使う機能を教えてください",
-  "このタブ（Tab B）の存在に気づいていましたか？",
-  "Tab Bを見つけた場合、どんな印象でしたか？",
-]
-target_segment = "active_users_30d"
-
-[a_z_test]                            # インタビューの代わりにA-Zテストを設計する場合
-enabled = false
-variants = []
+Connection
+  id, productId
+  type: "amplitude" | "linear" | "github"
+  config: JSON  ← API keys, project IDs など
+  status: "active" | "error"
 ```
 
-### `results.toml`（Phase 2 → Phase 3）
+### Insight（Phase 1）
 
-```toml
-[meta]
-id = "res-001"
-hypothesis_id = "hyp-001"
-completed_at = "2026-03-09T18:00:00Z"
-total_interviews = 50
+```
+Insight
+  id, productId, connectionId (amplitude)
+  status: "detected" | "investigating" | "resolved"
 
-[summary]
-key_insight = "ユーザーの78%がTab Bの存在に気づいていなかった"
-confidence = 0.89
-root_cause = "UIの視認性問題（コントラスト不足・位置）"
+  # detected 時点で埋まる
+  metric: string        ← "mobile_churn_rate"
+  value: number         ← 0.15
+  observation: string   ← "モバイル離脱率が+15%"
 
-[findings]
-awareness_rate = 0.22                 # Tab Bを知っていたユーザー比率
-quotes = [
-  "「え、こんなタブあったんですね」（インタビュー #12）",
-  "「ずっと使ってますが気づかなかった」（インタビュー #31）",
-]
-themes = ["visibility", "discoverability", "contrast"]
+  # investigating → resolved で埋まる
+  summary: string
+  findings: JSON
+  confidence: number    ← 0.87
 
-[suggested_actions]
+  createdAt, resolvedAt
+```
 
-[[suggested_actions.items]]
-title = "Tab Bのコントラスト改善"
-description = "背景色とテキスト色のコントラスト比をWCAG AA基準（4.5:1）以上に"
-impact = "high"
-effort = "low"
-confidence = 0.89
+### Interview / InterviewResponse（Phase 2）
 
-[[suggested_actions.items]]
-title = "Tab Bに通知ドットを追加"
-description = "初回ログイン時に赤いドットでTab Bの存在を示す"
-impact = "medium"
-effort = "low"
-confidence = 0.76
+```
+Interview
+  id, insightId
+  status: "pending" | "active" | "completed"
+  targetCount: number   ← 20
+  sentCount: number
+  responseCount: number
+  questions: JSON
 
-[[suggested_actions.items]]
-title = "Tab Bの配置を左側に移動"
-description = "最も目に入る位置（左端）にTab Bを移動"
-impact = "high"
-effort = "medium"
-confidence = 0.71
+InterviewResponse
+  id, interviewId
+  respondentId: string  ← ユーザーID or 匿名ID
+  answers: JSON
+  sentiment: string
+  createdAt
+```
+
+### Recommendation（Phase 2 → 3）
+
+```
+Recommendation
+  id, insightId
+  title: string
+  description: string
+  impact: "high" | "medium" | "low"
+  confidence: number
+  effort: "high" | "medium" | "low"
+  estimatedValue: string   ← "月$45K回復"
+  status: "draft" | "approved" | "rejected"
+```
+
+### PRD（Phase 3、別サービス）
+
+```
+PRD
+  id, recommendationId
+  content: text    ← Markdown形式の要件定義
+  status: "draft" | "approved"
+  createdAt, approvedAt
+```
+
+### Task（Phase 4）
+
+```
+Task
+  id, prdId
+  title: string
+  description: string
+  linearIssueId: string
+  linearUrl: string
+  githubPrId: string
+  githubPrUrl: string
+  status: "pending" | "in_progress" | "review" | "done"
+```
+
+### Experiment（Phase 5）
+
+```
+Experiment
+  id, productId
+  taskIds: string[]
+  amplitudeEventKey: string   ← 結果を参照するAmplitudeイベント
+  status: "running" | "completed"
+  results: JSON               ← メトリクス変化量
+  startedAt, completedAt
 ```
 
 ---
 
-## サービス間フロー
+## フルループフロー
 
 ```
-Amplitude API
-     │
-     ▼
-┌──────────────┐   hypothesis.toml   ┌──────────────┐
-│  Discovery   │ ──────────────────▶ │   Research   │
-│  (Phase 1)   │                     │   (Phase 2)  │
-│  Chat UI     │ ◀── human review ─▶ │  AI Interview│
-└──────────────┘                     └──────┬───────┘
-                                            │ results.toml
-                                            ▼
-                                     ┌──────────────┐
-                                     │    Action    │ ── Linear tasks ──▶ Linear
-                                     │   (Phase 3)  │                        │
-                                     │  Task Gen    │                        │ poll
-                                     └──────────────┘                        ▼
-                                                                      ┌──────────────┐
-                                                                      │   Symphony   │
-                                                                      │  (~/dev/     │ ── PR ──▶ GitHub
-                                                                      │   kanban)    │
-                                                                      │ Coding Agent │
-                                                                      └──────────────┘
-```
-
-### オプション: Phase 1 → Phase 3（インタビューをスキップ）
-
-データが十分あり、仮説の確信度が高い場合は、Phase 2をスキップしてA-Zテストタスクを直接生成できる。
-
-```
-hypothesis.toml（type = "a_z_test"）
-     │
-     └──────────────────────────────▶ Action（Phase 3）
+┌─────────────────────────────────────────────────────────────────┐
+│  初期セットアップ（一回のみ）                                      │
+│  Organization作成 → User作成 → Product作成                       │
+│  → Connection設定（Amplitude, Linear, GitHub）                   │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 1: Discovery（discovery/）                                │
+│                                                                  │
+│  Connection(Amplitude) からデータ取得                             │
+│    → Insight 作成（status: detected）                            │
+│    → AI が自動調査（status: investigating）                       │
+│    → summary / findings / confidence を埋める                    │
+│    → Insight 更新（status: resolved）← 定量分析完了              │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 2: Research（research/）                                  │
+│                                                                  │
+│  Insight に紐づく Interview 作成                                  │
+│    → 影響ユーザーにインタビューを送付                               │
+│    → InterviewResponse が蓄積                                    │
+│    → 定量 + 定性を統合して Recommendation 作成                    │
+│    → PM が承認（status: approved）← Human in the loop           │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 3: PRD（prd/）← 別サービス                                 │
+│                                                                  │
+│  Recommendation から PRD を自動生成                               │
+│    → PM がレビュー・承認（status: approved）← Human in the loop  │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 4: Action（action/）                                      │
+│                                                                  │
+│  PRD の内容を Task に分解                                         │
+│    → Connection(Linear) に同期（linearIssueId 取得）              │
+│    → Symphony（~/dev/kanban）が Linear をポーリング               │
+│    → コーディングエージェントが PR 作成                             │
+│    → Connection(GitHub) に PR リンクを保存                        │
+│    ※ Linear → Slack 通知は Linear 側の設定で対応                  │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 5: Experiment（experiment/）                              │
+│                                                                  │
+│  リリース後、Experiment 作成                                       │
+│    → Connection(Amplitude) で結果を参照                           │
+│    → results に変化量を記録（status: completed）                  │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓
+                  次の Insight を検知 → ループ
 ```
 
 ---
 
-## 技術スタック（候補）
+## Symphony 連携
+
+Symphony（`~/dev/kanban`）は **Iterate の外部サービス** として動作する。
+
+```
+Linear（Task作成済み）
+      │
+      │ ポーリング
+      ▼
+┌─────────────┐
+│  Symphony   │
+│  ~/dev/     │ ── コーディングエージェント起動
+│  kanban     │ ── 隔離ワークスペースで実装
+│             │ ── PR 作成
+└─────────────┘
+      │
+      ▼
+  GitHub PR
+```
+
+- Symphony は Linear の特定プロジェクト / ラベルをポーリング
+- Task ごとに隔離されたワークスペースでエージェントを起動
+- PR 作成後、Iterate 側の Task に `githubPrUrl` を書き戻す（Webhook or polling）
+
+---
+
+## 技術スタック
 
 | レイヤー | 技術 |
 |---------|------|
-| フレームワーク | Next.js 15（App Router）|
+| フレームワーク | Next.js 15（App Router） |
 | モノレポ管理 | Turborepo + pnpm workspaces |
-| DB | PostgreSQL（Supabase or Neon） |
-| AI | Anthropic Claude API（Phase 1: 壁打ち、Phase 3: タスク生成）|
-| AI Interview | OpenAI Realtime API or Claude（Phase 2） |
-| TOML処理 | `@iarna/toml`（Node.js） |
-| 外部連携 | Linear API, Amplitude API, GitHub API（Symphony経由） |
+| DB | PostgreSQL（Supabase or Neon）+ Prisma |
+| AI（Discovery） | Anthropic Claude API |
+| AI（Research） | OpenAI Realtime API or Claude |
+| AI（PRD・Action） | Anthropic Claude API |
+| 外部連携 | Amplitude API, Linear API, GitHub API |
+| Symphony | ~/dev/kanban（Linear ポーリング → コーディングエージェント） |
 | デプロイ | Vercel |
 
 ---
 
-## データフローの原則
+## Human in the loop
 
-1. **TOMLが唯一の真実**：サービス間はTOMLのみで通信。DBスキーマに依存しない
-2. **Human in the loopはオプション**：各フェーズ間で人間の承認を挟むか自動で流すかを設定で切り替え
-3. **各サービスは独立**：Phase 2だけをスタンドアロンのAIインタビューサービスとして外部提供することも可能
-4. **監査可能**：すべてのTOMLファイルはバージョン管理可能（Gitで追える）
+| フェーズ | 承認ポイント | スキップ可否 |
+|---------|------------|-----------|
+| Phase 2 | Recommendation を承認 | 設定で自動化可 |
+| Phase 3 | PRD を承認 | 設定で自動化可 |
+| Phase 4 | Task リストを承認（Linear 登録前） | 設定で自動化可 |
+| Phase 4 | PR をレビュー（エンジニア） | 必須 |
 
 ---
 
