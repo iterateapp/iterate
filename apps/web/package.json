@@ -6,14 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
     "@iterate/ai": "workspace:*",
     "@iterate/database": "workspace:*",
+    "@iterate/db": "workspace:*",
+    "@iterate/types": "workspace:*",
+    "@prisma/client": "^6.19.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "livekit-client": "^2",
+    "livekit-server-sdk": "^2",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "react": "19.2.3",
