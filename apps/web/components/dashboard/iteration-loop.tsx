@@ -12,6 +12,14 @@ import {
 
 const stepIcons = [Database, Sparkles, Code, BarChart3]
 
+// Per-step color theme: 1=blue, 2=violet, 3=emerald, 4=amber
+const stepColors = [
+  { card: "border-blue-500 bg-blue-50 shadow-md shadow-blue-500/10 dark:border-blue-400 dark:bg-blue-950/60", icon: "bg-blue-500 text-white dark:bg-blue-500", badge: "bg-blue-500 text-white" },
+  { card: "border-violet-500 bg-violet-50 shadow-md shadow-violet-500/10 dark:border-violet-400 dark:bg-violet-950/60", icon: "bg-violet-500 text-white dark:bg-violet-500", badge: "bg-violet-500 text-white" },
+  { card: "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-500/10 dark:border-emerald-400 dark:bg-emerald-950/60", icon: "bg-emerald-500 text-white dark:bg-emerald-500", badge: "bg-emerald-500 text-white" },
+  { card: "border-amber-500 bg-amber-50 shadow-md shadow-amber-500/10 dark:border-amber-400 dark:bg-amber-950/60", icon: "bg-amber-500 text-white dark:bg-amber-500", badge: "bg-amber-500 text-white" },
+]
+
 const statusStyles: Record<LoopStepStatus, { card: string; icon: string; badge: string }> = {
   complete: {
     card: "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-800",
@@ -56,17 +64,26 @@ export function IterationLoop({ currentHref }: { currentHref?: string } = {}) {
                 href={step.href}
                 className={cn(
                   "group flex-1 rounded-xl border p-4 transition-all hover:shadow-sm",
-                  styles.card,
-                  isCurrent && "ring-2 ring-violet-500 dark:ring-violet-400 shadow-md shadow-violet-500/10 scale-[1.02]"
+                  isCurrent
+                    ? stepColors[i].card
+                    : currentHref
+                      ? "border-border bg-card opacity-50 hover:opacity-75"
+                      : styles.card,
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", styles.icon)}>
+                  <div className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-lg",
+                    isCurrent ? stepColors[i].icon : styles.icon
+                  )}>
                     <Icon className="size-4.5" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={cn("inline-flex h-4 items-center rounded px-1 text-[10px] font-bold", styles.badge)}>
+                      <span className={cn(
+                        "inline-flex h-4 items-center rounded px-1 text-[10px] font-bold",
+                        isCurrent ? stepColors[i].badge : styles.badge
+                      )}>
                         {i + 1}
                       </span>
                       <p className="text-sm font-semibold">{step.label}</p>
