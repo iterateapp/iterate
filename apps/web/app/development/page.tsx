@@ -2,6 +2,7 @@ import { Header } from "@/components/dashboard/header"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
 import { features, pullRequests, repoInfo, type FeatureStatus, type PrStatus } from "@/lib/mock-data"
+import Image from "next/image"
 import {
   Code,
   GitMerge,
@@ -12,7 +13,6 @@ import {
   MessageSquare,
   GitBranch,
   GitPullRequest,
-  ExternalLink,
 } from "lucide-react"
 
 const featureStatusColor: Record<FeatureStatus, string> = {
@@ -89,8 +89,8 @@ export default function DevelopmentPage() {
           </div>
           <div className="h-3.5 w-px bg-border" />
           <span className="text-[11px] text-muted-foreground">Last push {repoInfo.lastPush}</span>
-          <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
-            <ExternalLink className="size-3" />
+          <div className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
+            <Image src="/logos/github.svg" alt="GitHub" width={14} height={14} className="dark:invert" />
             GitHub
           </div>
         </div>

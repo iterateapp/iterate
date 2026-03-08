@@ -112,14 +112,43 @@ export function IterationLoop({ currentHref }: { currentHref?: string } = {}) {
         })}
       </div>
 
-      {/* Loop-back: 4 → 1 */}
-      <div className="flex items-center gap-2 px-1">
-        <div className="h-px flex-1 bg-gradient-to-r from-amber-300/40 via-muted-foreground/10 to-blue-300/40 dark:from-amber-600/30 dark:to-blue-600/30" />
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60">
-          <RotateCcw className="size-2.5" />
-          Results feed back to Data
-        </div>
-        <div className="h-px flex-1 bg-gradient-to-r from-blue-300/40 via-muted-foreground/10 to-amber-300/40 dark:from-blue-600/30 dark:to-amber-600/30" />
+      {/* Loop-back arrow: Step 4 → Step 1 */}
+      <div className="relative hidden h-7 lg:block mx-[60px]">
+        {/* U-shaped line */}
+        <svg
+          className="absolute inset-0 h-full w-full overflow-visible"
+          viewBox="0 0 100 20"
+          preserveAspectRatio="none"
+          fill="none"
+        >
+          <defs>
+            <linearGradient id="loopGrad" x1="100%" y1="0" x2="0%" y2="0">
+              <stop offset="0%" stopColor="rgb(245 158 11)" stopOpacity="0.45" />
+              <stop offset="50%" stopColor="rgb(168 162 158)" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="rgb(59 130 246)" stopOpacity="0.45" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M 97 0 L 97 14 Q 97 18 93 18 L 7 18 Q 3 18 3 14 L 3 2"
+            stroke="url(#loopGrad)"
+            strokeWidth="1.2"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        {/* Arrowhead */}
+        <svg
+          className="absolute -top-[5px] left-[3%] -translate-x-1/2 overflow-visible"
+          width="10"
+          height="8"
+          viewBox="0 0 10 8"
+          fill="none"
+        >
+          <path d="M5 0L9 7H1L5 0Z" fill="rgb(59 130 246)" fillOpacity="0.5" />
+        </svg>
+        {/* Label */}
+        <span className="absolute left-1/2 top-[10px] -translate-x-1/2 text-[9px] font-medium text-muted-foreground/50">
+          Results
+        </span>
       </div>
     </div>
   )

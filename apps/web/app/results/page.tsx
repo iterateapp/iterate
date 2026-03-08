@@ -3,12 +3,12 @@ import { Header } from "@/components/dashboard/header"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
 import { experiments, features, repoInfo, type ExperimentStatus } from "@/lib/mock-data"
+import Image from "next/image"
 import {
   BarChart3,
   TrendingUp,
   CornerDownLeft,
   GitBranch,
-  ExternalLink,
   FlaskConical,
 } from "lucide-react"
 
@@ -57,8 +57,8 @@ export default function ResultsPage() {
           </div>
           <div className="h-3.5 w-px bg-border" />
           <span className="text-[11px] text-muted-foreground">{experiments.filter(e => e.status === "running").length} running on feature branches</span>
-          <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
-            <ExternalLink className="size-3" />
+          <div className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
+            <Image src="/logos/github.svg" alt="GitHub" width={14} height={14} className="dark:invert" />
             GitHub
           </div>
         </div>
