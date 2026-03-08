@@ -161,8 +161,8 @@ export default function DataPage() {
             {/* Funnel */}
             <div className="rounded-xl border bg-card ring-1 ring-foreground/10">
               <div className="border-b px-4 py-3">
-                <p className="text-sm font-medium">Activation Funnel</p>
-                <p className="text-xs text-muted-foreground">User journey conversion</p>
+                <p className="text-sm font-medium">Booking Funnel</p>
+                <p className="text-xs text-muted-foreground">Hotel search to booking completion</p>
               </div>
               <div className="p-4 space-y-2">
                 {funnelData.map((step, i) => (

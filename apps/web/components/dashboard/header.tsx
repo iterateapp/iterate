@@ -36,7 +36,7 @@ export function Header({ currentPath, chatOpen, onToggleChat }: { currentPath?: 
         <div className="h-4 w-px bg-border" />
 
         <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-          Acme Corp
+          ahoda
           <ChevronDown className="size-3" />
         </button>
 
