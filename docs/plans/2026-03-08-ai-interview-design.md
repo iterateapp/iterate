@@ -8,6 +8,8 @@ Phase 2 of the Iterate product loop. A web-based AI voice interview app where an
 
 ## System Context
 
+![AIインタビューシステム構成](../images/interview-system.png)
+
 ```
 Phase 1 (PM + AI chat) → config_toml → Supabase
                                             ↓ session_id in URL

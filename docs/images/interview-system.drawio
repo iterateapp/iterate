@@ -1,0 +1,103 @@
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="Interview System" id="interview-system">
+    <mxGraphModel dx="1024" dy="768" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="AIインタビューシステム — コンポーネント構成とリクエストフロー"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="10" width="900" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="browser" value="👤 インタビュー対象者&#xa;（ブラウザ）"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="30" y="280" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1" value="① /interview/[sessionId] を開く"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=10;"
+          edge="1" source="browser" target="nextjs" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="nextjs" value="Next.js (apps/web)&#xa;&#xa;• セッション検証&#xa;• インタビューUI&#xa;• LiveKit接続管理"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;fontStyle=1;align=left;spacingLeft=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="250" y="210" width="220" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="supa" value="PostgreSQL / Supabase&#xa;&#xa;interview_sessions&#xa;• config_toml&#xa;• results_toml&#xa;• status"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;fontStyle=1;align=left;spacingLeft=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="250" y="450" width="220" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="② セッション取得"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=10;"
+          edge="1" source="nextjs" target="supa" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="③ POST /api/interview/join"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=10;"
+          edge="1" source="browser" target="nextjs" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="lk" value="LiveKit Cloud&#xa;&#xa;• Room作成&#xa;• Job dispatch&#xa;• 音声ストリーミング"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;fontStyle=1;align=left;spacingLeft=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="560" y="210" width="220" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="④ Room作成 / Token返却"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=10;"
+          edge="1" source="nextjs" target="lk" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5" value="⑤ LiveKit接続（音声）"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeWidth=2;dashed=1;html=1;fontSize=10;"
+          edge="1" source="browser" target="lk" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="180"/>
+              <mxPoint x="670" y="180"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="agent" value="Interview Agent (apps/interview-agent)&#xa;&#xa;• 質問ループ管理&#xa;• 文字起こし集約&#xa;• results_toml生成"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=11;fontStyle=1;align=left;spacingLeft=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="560" y="450" width="250" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="s6" value="⑥ Job dispatch"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=10;"
+          edge="1" source="lk" target="agent" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="stt" value="Google Cloud STT&#xa;音声認識"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="390" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="llm" value="OpenAI GPT-4o&#xa;会話生成 / 追加質問"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="460" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="tts" value="Fish Audio TTS&#xa;音声合成"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="530" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="as1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;" edge="1" source="agent" target="stt" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="as2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;" edge="1" source="agent" target="llm" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="as3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;" edge="1" source="agent" target="tts" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="s7" value="⑦ results_toml保存"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=10;"
+          edge="1" source="agent" target="supa" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="aiLabel" value="AIサービス群"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="365" width="160" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
