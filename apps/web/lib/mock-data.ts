@@ -133,73 +133,137 @@ export interface NpsData {
 export const npsData: NpsData = { score: 42, previousScore: 38, promoters: 48, passives: 32, detractors: 20 }
 
 // ---------------------------------------------------------------------------
-// Step 2 — Analysis: AI Chat
+// Step 2 — Analysis: Insight Lifecycle
 // ---------------------------------------------------------------------------
-export interface ChatMessage {
+export type InsightStatus = "detected" | "investigating" | "resolved" | "recommendation" | "approved" | "in_development"
+
+export const insightStatusConfig: Record<InsightStatus, { label: string; color: string }> = {
+  detected: { label: "Detected", color: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300" },
+  investigating: { label: "Investigating", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300" },
+  resolved: { label: "Resolved", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" },
+  recommendation: { label: "Recommendation", color: "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300" },
+  approved: { label: "Approved", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300" },
+  in_development: { label: "In Development", color: "bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300" },
+}
+
+export const insightStatusOrder: InsightStatus[] = ["detected", "investigating", "resolved", "recommendation", "approved", "in_development"]
+
+export interface InsightMessage {
   id: string
   role: "ai" | "user"
   content: string
   timestamp: string
+  recommendation?: {
+    title: string
+    description: string
+    estimatedImpact: string
+    effort: "S" | "M" | "L" | "XL"
+  }
 }
 
-export const analysisChatMessages: ChatMessage[] = [
-  { id: "msg_001", role: "ai", content: "I've completed the analysis of **12,438 events** from Amplitude and **5 user interviews**. I identified **8 insights** across engagement, retention, conversion, and performance. Here are the most critical findings:", timestamp: "2 min ago" },
-  { id: "msg_002", role: "ai", content: "**#1 Creator Discovery (Impact 9.1)** — 68% of users drop off on the discovery page. Session time is only 14s compared to 3.2min on curated feeds. 23 user interviews confirm this is a top pain point. I recommend building a **Creator Discovery Feed**.\n\n**#2 Notification Overload (Impact 8.4)** — 42% of users disabled push notifications within 7 days. Opt-out rate is 3x the industry average. I recommend implementing **Smart Notification Batching**.", timestamp: "2 min ago" },
-  { id: "msg_003", role: "user", content: "The discovery issue sounds critical. Can you tell me more about what users are saying?", timestamp: "1 min ago" },
-  { id: "msg_004", role: "ai", content: "From the interview data:\n\n> *\"I spend 10 minutes scrolling but can never find creators I actually like. The recommendations feel completely random.\"* — User #2847\n\n> *\"Search works fine if I know the exact name, but I can't explore by topic or style at all.\"* — User #4521\n\nThe core issue is **passive discovery** — users have no way to find creators aligned with their interests without already knowing who they are. I'd suggest conducting **5 more targeted interviews** with users who dropped off the discovery page to validate the specific feature direction before moving to development.", timestamp: "1 min ago" },
-  { id: "msg_005", role: "user", content: "Good insight. Let's plan those interviews. What about the notification issue — is that ready to move to development?", timestamp: "just now" },
-  { id: "msg_006", role: "ai", content: "The notification batching insight has **79% confidence** — strong enough to proceed. Here's what I recommend:\n\n1. **Move to Development** → Generate a feature spec and tasks for Smart Notification Batching\n2. **Collect more data first** → Survey the 42% who opted out to refine the batching algorithm\n\nI'd recommend option 2 first to increase confidence, but option 1 is viable if you want to ship faster. Want me to generate the feature proposal?", timestamp: "just now" },
-]
-
-// ---------------------------------------------------------------------------
-// Step 2 — Analysis: AI Insights
-// ---------------------------------------------------------------------------
-export type InsightCategory = "engagement" | "retention" | "conversion" | "performance"
-
-export interface Insight {
+export interface LifecycleInsight {
   id: string
-  problem: string
-  evidence: string
-  recommendation: string
-  impactScore: number
-  confidence: number
-  source: string
-  category: InsightCategory
-  createdAt: string
-}
-
-export const insights: Insight[] = [
-  { id: "ins_001", problem: "Users struggle to discover creators relevant to their interests", evidence: "68% drop-off on discovery page. Session time 14s vs 3.2min on curated feeds. 23 user interviews confirm.", recommendation: "Creator Discovery Feed", impactScore: 9.1, confidence: 86, source: "Amplitude · 12.4k events", category: "engagement", createdAt: "2h ago" },
-  { id: "ins_002", problem: "Notification overload causing users to disable all notifications", evidence: "42% of users disabled push notifications within 7 days. Opt-out rate 3x industry average.", recommendation: "Smart Notification Batching", impactScore: 8.4, confidence: 79, source: "Amplitude · 8.2k events", category: "retention", createdAt: "5h ago" },
-  { id: "ins_003", problem: "New users drop off before completing onboarding", evidence: "Only 34% complete onboarding. Step 3 has 52% abandonment. Completers have 4.2x higher 30-day retention.", recommendation: "Onboarding Personalization", impactScore: 8.1, confidence: 91, source: "Amplitude · 6.8k events", category: "conversion", createdAt: "1d ago" },
-  { id: "ins_004", problem: "Search returns irrelevant results for long-tail queries", evidence: "67% refinement rate for queries >3 words. 2.8 searches avg before finding content. 41% exit rate.", recommendation: "Semantic Search Upgrade", impactScore: 7.9, confidence: 74, source: "Amplitude · 15.1k events", category: "engagement", createdAt: "1d ago" },
-  { id: "ins_005", problem: "Content sharing flow has too much friction", evidence: "Share CTR 12% but only 3.1% complete. 4 taps required vs competitor 2-tap flows.", recommendation: "One-tap Share Sheet", impactScore: 7.5, confidence: 68, source: "Amplitude · 9.4k events", category: "engagement", createdAt: "2d ago" },
-  { id: "ins_006", problem: "Mobile checkout has 78% cart abandonment", evidence: "Desktop conversion 6.2% vs mobile 1.4%. Payment step 45s on mobile vs 18s desktop.", recommendation: "Mobile Checkout Redesign", impactScore: 7.2, confidence: 82, source: "Amplitude · 4.1k events", category: "conversion", createdAt: "3d ago" },
-  { id: "ins_007", problem: "User profiles 60% incomplete on average", evidence: "22% have a bio. Profile completion correlates with 2.1x higher engagement.", recommendation: "Progressive Profile Nudges", impactScore: 6.8, confidence: 71, source: "Amplitude · 3.5k events", category: "engagement", createdAt: "4d ago" },
-  { id: "ins_008", problem: "API response times spike during peak hours", evidence: "P95 latency 120ms→890ms from 2-6pm UTC. Feed endpoint: 68% of peak load. 12% requests timeout.", recommendation: "Feed API Caching Layer", impactScore: 6.5, confidence: 88, source: "Sentry · 2.3k errors", category: "performance", createdAt: "5d ago" },
-]
-
-// ---------------------------------------------------------------------------
-// Step 2 — Analysis: AI Suggestions (feed back to Data)
-// ---------------------------------------------------------------------------
-export type SuggestionType = "interview" | "data_fetch" | "cohort_analysis"
-
-export interface AiSuggestion {
-  id: string
-  type: SuggestionType
+  status: InsightStatus
   title: string
-  description: string
-  priority: "high" | "medium" | "low"
-  feedsBackTo: "Quantitative Data" | "Qualitative Data"
-  relatedInsight: string
+  metric: string
+  source: string
+  detectedAt: string
+  confidence?: number
+  interviewsSent?: number
+  interviewsResponded?: number
+  prdGenerated?: boolean
+  taskCount?: number
+  messages: InsightMessage[]
 }
 
-export const aiSuggestions: AiSuggestion[] = [
-  { id: "sug_001", type: "interview", title: "Interview users with discovery drop-off", description: "23 users dropped off on the discovery page in the last 7 days. Schedule 5 interviews to understand specific pain points and expectations.", priority: "high", feedsBackTo: "Qualitative Data", relatedInsight: "ins_001" },
-  { id: "sug_002", type: "data_fetch", title: "Connect Sentry for error correlation", description: "12% of sessions during peak hours may be affected by API timeouts. Import error logs to correlate with user drop-off patterns.", priority: "high", feedsBackTo: "Quantitative Data", relatedInsight: "ins_008" },
-  { id: "sug_003", type: "cohort_analysis", title: "Run onboarding completion cohort analysis", description: "Compare 30-day behavior of onboarding completers vs non-completers. Identify the key activation moments that predict retention.", priority: "medium", feedsBackTo: "Quantitative Data", relatedInsight: "ins_003" },
-  { id: "sug_004", type: "interview", title: "Survey notification opt-out users", description: "42% of users disabled notifications. Send a 3-question in-app survey to understand preferences and ideal frequency.", priority: "medium", feedsBackTo: "Qualitative Data", relatedInsight: "ins_002" },
-  { id: "sug_005", type: "data_fetch", title: "Import Slack #feedback channel", description: "178 unprocessed messages in the last 30 days contain product feedback. Import and categorize for sentiment analysis.", priority: "low", feedsBackTo: "Qualitative Data", relatedInsight: "ins_005" },
+export const lifecycleInsights: LifecycleInsight[] = [
+  {
+    id: "ins_001",
+    status: "approved",
+    title: "Mobile checkout abandonment rate +15%",
+    metric: "Cart Abandonment",
+    source: "Amplitude",
+    detectedAt: "5d ago",
+    confidence: 92,
+    interviewsSent: 20,
+    interviewsResponded: 14,
+    prdGenerated: true,
+    taskCount: 6,
+    messages: [
+      { id: "m_001_1", role: "ai", content: "**Anomaly detected:** Mobile cart abandonment increased 15% over 2 weeks. Current rate: 78% (vs 34% desktop). Starting investigation.", timestamp: "5d ago" },
+      { id: "m_001_2", role: "ai", content: "Investigation complete. Spike correlates with payment SDK v3.2 upgrade on Mar 1. **Step 3→4 transition** has 78% drop-off on mobile.\n\n**Root cause:** New SDK re-renders payment form on field focus change, causing input loss on mobile keyboards.\n\nSending interview requests to 20 affected users.", timestamp: "5d ago" },
+      { id: "m_001_3", role: "user", content: "How many users are affected weekly?", timestamp: "4d ago" },
+      { id: "m_001_4", role: "ai", content: "From Amplitude data:\n\n- **~2,400 users/week** reach mobile checkout\n- **~1,870** abandon at Step 3→4\n- Average cart value: **$24**\n- Estimated weekly revenue loss: **$11.2K**", timestamp: "4d ago" },
+      { id: "m_001_5", role: "ai", content: "**14 of 20 interviews completed.** Key themes:\n\n> \"The payment page reloads every time I switch fields\"\n> \"I gave up after entering my card twice\"\n\n**92% confidence** — quantitative and qualitative data integrated.", timestamp: "3d ago", recommendation: { title: "Simplify to 2-step mobile checkout", description: "Replace 5-step payment flow with: (1) Review cart, (2) One-tap payment via Apple Pay / Google Pay. Fall back to saved cards, then manual entry.", estimatedImpact: "Recover ~$45K/month in abandoned carts", effort: "M" } },
+      { id: "m_001_6", role: "user", content: "Approved. Generate the PRD and create tasks.", timestamp: "2d ago" },
+      { id: "m_001_7", role: "ai", content: "PRD generated and **6 tasks** created in Linear:\n\n1. Implement Apple Pay / Google Pay integration\n2. Design 2-step checkout flow\n3. Build cart review component\n4. Add payment method fallback logic\n5. Write checkout flow tests\n6. Set up A/B experiment\n\nGitHub branch: `feat/mobile-checkout-v2`", timestamp: "2d ago" },
+    ],
+  },
+  {
+    id: "ins_002",
+    status: "recommendation",
+    title: "Creator discovery page 68% drop-off",
+    metric: "Discovery Engagement",
+    source: "Amplitude",
+    detectedAt: "3d ago",
+    confidence: 86,
+    interviewsSent: 15,
+    interviewsResponded: 12,
+    messages: [
+      { id: "m_002_1", role: "ai", content: "**Anomaly detected:** Discovery page drop-off is 68%. Users spend only 14s before leaving — 13.7x lower than curated feeds.", timestamp: "3d ago" },
+      { id: "m_002_2", role: "ai", content: "Investigation complete. Core issue: **zero personalization** in discovery algorithm. Shows globally trending creators regardless of user preferences.\n\n- 14s avg session vs 3.2min on curated feeds\n- 23 support tickets about discovery quality\n- Users who discover a creator have **4.1x higher** 30-day retention\n\nSending 15 interview requests.", timestamp: "3d ago" },
+      { id: "m_002_3", role: "user", content: "What are users saying?", timestamp: "2d ago" },
+      { id: "m_002_4", role: "ai", content: "12 of 15 responded. Consistent feedback:\n\n> \"I scroll for 10 minutes and can't find anyone I like\"\n> \"The recommendations feel completely random\"\n> \"I only find creators through friends, never through the app\"\n\nPattern: users want **interest-based** recommendations, not popularity-based. Confidence: **86%**.", timestamp: "2d ago" },
+      { id: "m_002_5", role: "ai", content: "Quantitative + qualitative integrated. Generating recommendation.", timestamp: "1d ago", recommendation: { title: "AI-powered creator discovery feed", description: "Personalized recommendations based on interests, interaction history, and content affinity. Include \"Because you follow X\" explanations.", estimatedImpact: "+40% discovery engagement, +15% follow rate", effort: "L" } },
+    ],
+  },
+  {
+    id: "ins_003",
+    status: "resolved",
+    title: "Notification opt-out rate 3x industry average",
+    metric: "Notification Opt-in",
+    source: "Amplitude",
+    detectedAt: "2d ago",
+    confidence: 79,
+    interviewsSent: 10,
+    interviewsResponded: 7,
+    messages: [
+      { id: "m_003_1", role: "ai", content: "**Anomaly detected:** Push notification opt-out rate is 42% within 7 days — 3x industry average (~14%). Investigating.", timestamp: "2d ago" },
+      { id: "m_003_2", role: "ai", content: "Findings:\n\n- Users receive **47 notifications/day** (8x recommended)\n- **No preference controls** — all or nothing\n- Opt-out users have **2.8x lower** 30-day retention\n\nSending 10 interview requests to recent opt-out users.", timestamp: "2d ago" },
+      { id: "m_003_3", role: "ai", content: "7 of 10 interviews completed:\n\n> \"I got 47 notifications in one day. I just turned them all off.\"\n> \"I want creator updates, but not likes and comments.\"\n\n**Insight resolved** — quant + qual integrated. Confidence: **79%**. Ready for recommendation.", timestamp: "1d ago" },
+      { id: "m_003_4", role: "user", content: "What notification types get the most engagement?", timestamp: "1d ago" },
+      { id: "m_003_5", role: "ai", content: "From Amplitude:\n\n- **New content from followed creators:** 34% open rate\n- **Someone followed you:** 22% open rate\n- **Likes on your content:** 4% open rate\n- **Comments on others' content:** 2% open rate\n\nBottom two categories = **72% of all notifications** but only **3% of engagement**. Strong case for priority-based batching. Generating recommendation next.", timestamp: "1d ago" },
+    ],
+  },
+  {
+    id: "ins_004",
+    status: "investigating",
+    title: "Onboarding Step 3 has 52% abandonment",
+    metric: "Onboarding Completion",
+    source: "Amplitude",
+    detectedAt: "1d ago",
+    confidence: 64,
+    interviewsSent: 12,
+    interviewsResponded: 4,
+    messages: [
+      { id: "m_004_1", role: "ai", content: "**Anomaly detected:** Onboarding completion is 34%. Step 3 (interest selection) has 52% abandonment. Completers have **4.2x higher** 30-day retention.", timestamp: "1d ago" },
+      { id: "m_004_2", role: "ai", content: "Investigating. Initial findings:\n\n- Users spend **8 seconds** on Step 3 before leaving\n- Only 6 broad interest categories\n- Users selecting 3+ interests have **67% higher** engagement\n\nSent 12 interviews — 4 returned so far. Confidence: **64%**.", timestamp: "1d ago" },
+      { id: "m_004_3", role: "user", content: "What are the current 6 categories?", timestamp: "12h ago" },
+      { id: "m_004_4", role: "ai", content: "**Art, Music, Tech, Lifestyle, Gaming, Education** — very broad. Successful platforms use 20-40 specific subcategories. Waiting for more interview responses to raise confidence.", timestamp: "12h ago" },
+    ],
+  },
+  {
+    id: "ins_005",
+    status: "detected",
+    title: "API P95 latency spike to 890ms at peak hours",
+    metric: "API Response Time",
+    source: "Amplitude",
+    detectedAt: "2h ago",
+    confidence: 42,
+    messages: [
+      { id: "m_005_1", role: "ai", content: "**Anomaly detected:** API P95 latency increased from 120ms to 890ms during peak hours (2-6pm UTC). Feed endpoint accounts for 68% of peak load. 12% of requests timing out.\n\nStarting automated investigation — analyzing endpoint patterns, database queries, and cache hit rates.", timestamp: "2h ago" },
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------
