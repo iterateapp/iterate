@@ -1,4 +1,6 @@
-# Cursor for PM リサーチまとめ
+# Iterate - Cursor for PM リサーチまとめ
+
+**プロダクト名: Iterate**
 
 ## YC RFS (Spring 2026) - Cursor for PM とは
 
