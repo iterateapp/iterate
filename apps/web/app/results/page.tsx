@@ -7,9 +7,9 @@ import Image from "next/image"
 import {
   BarChart3,
   TrendingUp,
-  CornerDownLeft,
   GitBranch,
   FlaskConical,
+  Database,
 } from "lucide-react"
 
 const statusBadge: Record<ExperimentStatus, string> = {
@@ -72,13 +72,6 @@ export default function ResultsPage() {
           ))}
         </div>
 
-        {/* Loop-back callout */}
-        <div className="mb-8 flex items-center gap-2 rounded-xl border border-dashed border-amber-300/60 bg-amber-50/30 px-4 py-3 dark:border-amber-800/60 dark:bg-amber-950/20">
-          <CornerDownLeft className="size-4 text-amber-500" />
-          <p className="text-xs text-muted-foreground">
-            Experiment results automatically feed back into <Link href="/data" className="font-medium text-foreground underline underline-offset-2">Data</Link> for the next iteration cycle.
-          </p>
-        </div>
 
         {/* ── Experiments ── */}
         <section className="mb-10">
@@ -143,6 +136,12 @@ export default function ResultsPage() {
                       })}
                     </div>
                   </div>
+                  {exp.status === "completed" && exp.significance >= 95 && (
+                    <Link href="/data" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900">
+                      <Database className="size-2.5" />
+                      <span>→ Fed back to Data — +{winner.change}% {exp.metric.toLowerCase()}</span>
+                    </Link>
+                  )}
                 </div>
               )
             })}
@@ -190,6 +189,7 @@ export default function ResultsPage() {
             </div>
           </section>
         )}
+
       </main>
     </div>
   )

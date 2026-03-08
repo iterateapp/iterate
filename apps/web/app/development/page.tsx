@@ -1,7 +1,8 @@
+import Link from "next/link"
 import { Header } from "@/components/dashboard/header"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
-import { features, pullRequests, repoInfo, type FeatureStatus, type PrStatus } from "@/lib/mock-data"
+import { features, pullRequests, repoInfo, experiments, type FeatureStatus, type PrStatus } from "@/lib/mock-data"
 import Image from "next/image"
 import {
   Code,
@@ -13,6 +14,7 @@ import {
   MessageSquare,
   GitBranch,
   GitPullRequest,
+  BarChart3,
 } from "lucide-react"
 
 const featureStatusColor: Record<FeatureStatus, string> = {
@@ -110,6 +112,7 @@ export default function DevelopmentPage() {
           <div className="space-y-3">
             {features.map(f => {
               const branches = featureBranches[f.name] || []
+              const linkedExp = experiments.find(e => e.featureName === f.name)
               return (
                 <div key={f.id} className="rounded-xl border bg-card p-5 ring-1 ring-foreground/10 transition-all hover:ring-foreground/20">
                   <div className="flex items-start justify-between gap-4">
@@ -128,6 +131,12 @@ export default function DevelopmentPage() {
                             </div>
                           ))}
                         </div>
+                      )}
+                      {linkedExp && (
+                        <Link href="/results" className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-700 transition-colors hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:hover:bg-amber-900">
+                          <BarChart3 className="size-2.5" />
+                          <span>→ Experiment {linkedExp.status}: {linkedExp.significance}% sig</span>
+                        </Link>
                       )}
                     </div>
                     <div className="flex shrink-0 gap-5 text-right">
@@ -202,6 +211,7 @@ export default function DevelopmentPage() {
             })}
           </div>
         </section>
+
       </main>
     </div>
   )

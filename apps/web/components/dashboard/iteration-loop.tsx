@@ -113,43 +113,48 @@ export function IterationLoop({ currentHref }: { currentHref?: string } = {}) {
       </div>
 
       {/* Loop-back arrow: Step 4 → Step 1 */}
-      <div className="relative hidden h-7 lg:block mx-[60px]">
-        {/* U-shaped line */}
-        <svg
-          className="absolute inset-0 h-full w-full overflow-visible"
-          viewBox="0 0 100 20"
-          preserveAspectRatio="none"
-          fill="none"
-        >
-          <defs>
-            <linearGradient id="loopGrad" x1="100%" y1="0" x2="0%" y2="0">
-              <stop offset="0%" stopColor="rgb(245 158 11)" stopOpacity="0.45" />
-              <stop offset="50%" stopColor="rgb(168 162 158)" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="rgb(59 130 246)" stopOpacity="0.45" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M 97 0 L 97 14 Q 97 18 93 18 L 7 18 Q 3 18 3 14 L 3 2"
-            stroke="url(#loopGrad)"
-            strokeWidth="1.2"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-        {/* Arrowhead */}
-        <svg
-          className="absolute -top-[5px] left-[3%] -translate-x-1/2 overflow-visible"
-          width="10"
-          height="8"
-          viewBox="0 0 10 8"
-          fill="none"
-        >
-          <path d="M5 0L9 7H1L5 0Z" fill="rgb(59 130 246)" fillOpacity="0.5" />
-        </svg>
-        {/* Label */}
-        <span className="absolute left-1/2 top-[10px] -translate-x-1/2 text-[9px] font-medium text-muted-foreground/50">
-          Results
-        </span>
-      </div>
+      {(() => {
+        const isStep4 = currentHref === iterationSteps[3]?.href
+        return (
+          <div className="relative hidden h-7 lg:block mx-[60px]">
+            {/* U-shaped line */}
+            <svg
+              className="absolute inset-0 h-full w-full overflow-visible"
+              viewBox="0 0 100 20"
+              preserveAspectRatio="none"
+              fill="none"
+            >
+              <defs>
+                <linearGradient id="loopGrad" x1="100%" y1="0" x2="0%" y2="0">
+                  <stop offset="0%" stopColor={isStep4 ? "rgb(245 158 11)" : "rgb(168 162 158)"} stopOpacity={isStep4 ? "0.45" : "0.15"} />
+                  <stop offset="50%" stopColor="rgb(168 162 158)" stopOpacity={isStep4 ? "0.2" : "0.1"} />
+                  <stop offset="100%" stopColor={isStep4 ? "rgb(59 130 246)" : "rgb(168 162 158)"} stopOpacity={isStep4 ? "0.45" : "0.15"} />
+                </linearGradient>
+              </defs>
+              <path
+                d="M 97 0 L 97 14 Q 97 18 93 18 L 7 18 Q 3 18 3 14 L 3 2"
+                stroke="url(#loopGrad)"
+                strokeWidth="1.2"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+            {/* Arrowhead */}
+            <svg
+              className="absolute -top-[5px] left-[3%] -translate-x-1/2 overflow-visible"
+              width="10"
+              height="8"
+              viewBox="0 0 10 8"
+              fill="none"
+            >
+              <path d="M5 0L9 7H1L5 0Z" fill={isStep4 ? "rgb(59 130 246)" : "rgb(168 162 158)"} fillOpacity={isStep4 ? "0.5" : "0.15"} />
+            </svg>
+            {/* Label */}
+            <span className="absolute left-1/2 top-[10px] -translate-x-1/2 text-[9px] font-medium text-muted-foreground/50">
+              Results
+            </span>
+          </div>
+        )
+      })()}
     </div>
   )
 }

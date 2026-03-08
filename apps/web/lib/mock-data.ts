@@ -168,6 +168,7 @@ export interface LifecycleInsight {
   metric: string
   source: string
   detectedAt: string
+  topics: string[] // links to Interview.topic and SupportTheme.theme
   confidence?: number
   interviewsSent?: number
   interviewsResponded?: number
@@ -184,6 +185,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Cart Abandonment",
     source: "Amplitude",
     detectedAt: "5d ago",
+    topics: [],
     confidence: 92,
     interviewsSent: 20,
     interviewsResponded: 14,
@@ -206,6 +208,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Discovery Engagement",
     source: "Amplitude",
     detectedAt: "3d ago",
+    topics: ["Discovery"],
     confidence: 86,
     interviewsSent: 15,
     interviewsResponded: 12,
@@ -224,6 +227,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Notification Opt-in",
     source: "Amplitude",
     detectedAt: "2d ago",
+    topics: ["Notifications"],
     confidence: 79,
     interviewsSent: 10,
     interviewsResponded: 7,
@@ -242,6 +246,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Onboarding Completion",
     source: "Amplitude",
     detectedAt: "1d ago",
+    topics: ["Onboarding"],
     confidence: 64,
     interviewsSent: 12,
     interviewsResponded: 4,
@@ -259,6 +264,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "API Response Time",
     source: "Amplitude",
     detectedAt: "2h ago",
+    topics: [],
     confidence: 42,
     messages: [
       { id: "m_005_1", role: "ai", content: "**Anomaly detected:** API P95 latency increased from 120ms to 890ms during peak hours (2-6pm UTC). Feed endpoint accounts for 68% of peak load. 12% of requests timing out.\n\nStarting automated investigation — analyzing endpoint patterns, database queries, and cache hit rates.", timestamp: "2h ago" },
@@ -283,10 +289,10 @@ export interface Feature {
 }
 
 export const features: Feature[] = [
-  { id: "feat_001", name: "Creator Discovery Feed", description: "Personalized feed that surfaces relevant creators based on user interests, interaction history, and trending content.", insightId: "ins_001", impactScore: 9.1, confidence: 86, effort: "L", status: "Proposed" },
-  { id: "feat_002", name: "Smart Notification Batching", description: "Intelligent grouping of notifications by priority and context, delivered at optimal times based on user behavior.", insightId: "ins_002", impactScore: 8.4, confidence: 79, effort: "M", status: "In Progress" },
-  { id: "feat_003", name: "Onboarding Personalization", description: "Dynamic onboarding flow that adapts based on user type, interests, and engagement patterns.", insightId: "ins_003", impactScore: 8.1, confidence: 91, effort: "M", status: "Released" },
-  { id: "feat_004", name: "Semantic Search Upgrade", description: "AI-powered search that understands intent and context for long-tail queries.", insightId: "ins_004", impactScore: 7.9, confidence: 74, effort: "L", status: "Approved" },
+  { id: "feat_001", name: "Creator Discovery Feed", description: "Personalized feed that surfaces relevant creators based on user interests, interaction history, and trending content.", insightId: "ins_002", impactScore: 9.1, confidence: 86, effort: "L", status: "Proposed" },
+  { id: "feat_002", name: "Smart Notification Batching", description: "Intelligent grouping of notifications by priority and context, delivered at optimal times based on user behavior.", insightId: "ins_003", impactScore: 8.4, confidence: 79, effort: "M", status: "In Progress" },
+  { id: "feat_003", name: "Onboarding Personalization", description: "Dynamic onboarding flow that adapts based on user type, interests, and engagement patterns.", insightId: "ins_004", impactScore: 8.1, confidence: 91, effort: "M", status: "Released" },
+  { id: "feat_004", name: "Semantic Search Upgrade", description: "AI-powered search that understands intent and context for long-tail queries.", insightId: "ins_001", impactScore: 7.9, confidence: 74, effort: "L", status: "Approved" },
   { id: "feat_005", name: "One-tap Share Sheet", description: "Streamlined sharing flow with platform-specific previews and one-tap actions.", insightId: "ins_005", impactScore: 7.5, confidence: 68, effort: "S", status: "Proposed" },
 ]
 
