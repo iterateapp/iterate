@@ -398,3 +398,122 @@ export const recentActivity = [
   { type: "result" as const, message: "Personalized Onboarding: +50% completion (98% significance)", time: "1d ago" },
   { type: "data" as const, message: "Imported 2.3k new events from Amplitude", time: "1d ago" },
 ]
+
+// ---------------------------------------------------------------------------
+// Chat Thread
+// ---------------------------------------------------------------------------
+export interface ThreadMessage {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  createdAt: string
+}
+
+export interface Thread {
+  id: string
+  title: string
+  updatedAt: string
+  preview: string
+  messages: ThreadMessage[]
+}
+
+export const threads: Thread[] = [
+  {
+    id: "thread_001",
+    title: "Creator discovery deep dive",
+    updatedAt: "9:05 AM",
+    preview: "Effort estimate: Large (L) — approximately 4-5 weeks...",
+    messages: [
+      {
+        id: "msg_001",
+        role: "assistant",
+        content: "Good morning! Here's your daily product briefing:\n\n**Key highlights:**\n- DAU up 8.2% to 12,847\n- Mobile checkout abandonment insight has been approved — 6 tasks created in Linear\n- Creator discovery drop-off (68%) detected 3 days ago, recommendation ready for review\n\nWhat would you like to focus on today?",
+        createdAt: "9:00 AM",
+      },
+      {
+        id: "msg_002",
+        role: "user",
+        content: "Tell me more about the creator discovery issue",
+        createdAt: "9:02 AM",
+      },
+      {
+        id: "msg_003",
+        role: "assistant",
+        content: "**Creator Discovery Page — 68% Drop-off**\n\nUsers spend only 14 seconds on discovery before leaving (vs 3.2 min on curated feeds). The core issue is zero personalization — the algorithm shows globally trending creators regardless of user preferences.\n\n**Evidence:**\n- 12/15 interview respondents confirmed\n- 23 support tickets about discovery quality\n- Users who discover a creator have 4.1x higher 30-day retention\n\n**Recommendation ready:** AI-powered creator discovery feed with interest-based matching. Estimated impact: +40% discovery engagement.\n\nWould you like to approve this recommendation?",
+        createdAt: "9:02 AM",
+      },
+      {
+        id: "msg_004",
+        role: "user",
+        content: "What's the effort estimate?",
+        createdAt: "9:05 AM",
+      },
+      {
+        id: "msg_005",
+        role: "assistant",
+        content: "Effort estimate: **Large (L)**\n\nBreakdown:\n- Recommendation engine backend: ~2 weeks\n- Interest profiling pipeline: ~1 week\n- New discovery UI: ~1 week\n- A/B test setup: ~2 days\n\nTotal: approximately 4-5 weeks with 2 engineers. The mobile checkout fix (Medium effort) is already in progress and won't conflict.\n\nShall I generate a PRD and create tasks?",
+        createdAt: "9:05 AM",
+      },
+    ],
+  },
+  {
+    id: "thread_002",
+    title: "Notification batching strategy",
+    updatedAt: "Yesterday",
+    preview: "Smart batching will group by priority. Top 2 categories...",
+    messages: [
+      {
+        id: "msg_010",
+        role: "user",
+        content: "What's the plan for notification batching?",
+        createdAt: "3:00 PM",
+      },
+      {
+        id: "msg_011",
+        role: "assistant",
+        content: "Current notification system sends **47 notifications/day** per user — 8x the recommended amount. The plan:\n\n1. **Priority tiers:** Creator updates (high), follows (medium), likes/comments (low)\n2. **Smart batching:** Low-priority items grouped into 2 daily digests\n3. **Optimal timing:** Deliver based on user's historical engagement patterns\n\nPR #145 (preferences UI) is open, PR #151 (timing engine) is in draft.",
+        createdAt: "3:01 PM",
+      },
+    ],
+  },
+  {
+    id: "thread_003",
+    title: "Mobile checkout fix status",
+    updatedAt: "Mar 6",
+    preview: "6 tasks created in Linear. GitHub branch: feat/mobile...",
+    messages: [
+      {
+        id: "msg_020",
+        role: "user",
+        content: "Status on the mobile checkout fix?",
+        createdAt: "10:00 AM",
+      },
+      {
+        id: "msg_021",
+        role: "assistant",
+        content: "**Mobile checkout — Approved & In Development**\n\nPRD generated, **6 tasks** in Linear:\n1. Apple Pay / Google Pay integration\n2. 2-step checkout flow design\n3. Cart review component\n4. Payment fallback logic\n5. Checkout flow tests\n6. A/B experiment setup\n\nBranch: `feat/mobile-checkout-v2`\nEstimated recovery: **~$45K/month** in abandoned carts.",
+        createdAt: "10:01 AM",
+      },
+    ],
+  },
+  {
+    id: "thread_004",
+    title: "Onboarding categories review",
+    updatedAt: "Mar 5",
+    preview: "Current 6 categories are too broad. Successful platforms...",
+    messages: [
+      {
+        id: "msg_030",
+        role: "user",
+        content: "How should we redesign the onboarding categories?",
+        createdAt: "2:00 PM",
+      },
+      {
+        id: "msg_031",
+        role: "assistant",
+        content: "Current categories (**Art, Music, Tech, Lifestyle, Gaming, Education**) are too broad — users spend only 8 seconds before abandoning.\n\n**Recommendation:** Expand to 24 subcategories with visual previews. Let users select 3+ interests. Show creator samples for each category.\n\nThe personalized onboarding experiment already shows **+50% completion** (98% significance). Building on that success.",
+        createdAt: "2:01 PM",
+      },
+    ],
+  },
+]

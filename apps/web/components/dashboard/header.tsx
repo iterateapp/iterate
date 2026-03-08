@@ -10,6 +10,7 @@ import {
   Bell,
   Settings,
   GitBranch,
+  MessageSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -20,7 +21,7 @@ const stepMeta = [
   { icon: BarChart3, color: "text-amber-500" },
 ]
 
-export function Header({ currentPath }: { currentPath?: string }) {
+export function Header({ currentPath, chatOpen, onToggleChat }: { currentPath?: string; chatOpen?: boolean; onToggleChat?: () => void }) {
   return (
     <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
       {/* Left */}
@@ -86,6 +87,20 @@ export function Header({ currentPath }: { currentPath?: string }) {
         <button className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
           <Settings className="size-3.5" />
         </button>
+
+        {onToggleChat && (
+          <button
+            onClick={onToggleChat}
+            className={cn(
+              "flex size-8 items-center justify-center rounded-md transition-colors",
+              chatOpen
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <MessageSquare className="size-3.5" />
+          </button>
+        )}
 
         <div className="ml-1 h-4 w-px bg-border" />
 

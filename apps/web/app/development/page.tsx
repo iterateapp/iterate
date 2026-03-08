@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Header } from "@/components/dashboard/header"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
 import { features, pullRequests, repoInfo, experiments, type FeatureStatus, type PrStatus } from "@/lib/mock-data"
@@ -58,9 +57,7 @@ for (const pr of pullRequests) {
 
 export default function DevelopmentPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header currentPath="/" />
-      <main className="mx-auto max-w-[1200px] px-8 py-8">
+    <div className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/development" />
 
         <div className="mt-8 mb-6 flex items-center gap-2.5">
@@ -211,8 +208,6 @@ export default function DevelopmentPage() {
             })}
           </div>
         </section>
-
-      </main>
     </div>
   )
 }

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Header } from "@/components/dashboard/header"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -132,9 +131,7 @@ export default function AnalysisPage() {
   }, {} as Record<InsightStatus, number>)
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header currentPath="/" />
-      <main className="mx-auto max-w-[1200px] px-8 py-8">
+    <div className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/analysis" />
 
         <div className="mt-8 mb-6 flex items-center gap-2.5">
@@ -344,8 +341,6 @@ export default function AnalysisPage() {
             </div>
           </div>
         </div>
-
-      </main>
     </div>
   )
 }
