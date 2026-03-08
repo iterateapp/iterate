@@ -2,28 +2,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { recentActivity } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 import {
-  Lightbulb,
-  ListTodo,
+  Sparkles,
+  MessageSquare,
   GitPullRequest,
   FlaskConical,
   BarChart3,
+  Database,
   Clock,
 } from "lucide-react"
 
 const activityIcons = {
-  insight: Lightbulb,
-  tasks: ListTodo,
+  insight: Sparkles,
+  suggestion: MessageSquare,
   pr: GitPullRequest,
   experiment: FlaskConical,
   result: BarChart3,
+  data: Database,
 }
 
 const activityColors = {
   insight: "text-violet-500",
-  tasks: "text-blue-500",
+  suggestion: "text-amber-500",
   pr: "text-emerald-500",
-  experiment: "text-amber-500",
+  experiment: "text-sky-500",
   result: "text-teal-500",
+  data: "text-blue-500",
 }
 
 export function ActivityFeed() {
@@ -51,9 +54,7 @@ export function ActivityFeed() {
                 </div>
                 <div className="flex-1 space-y-0.5">
                   <p className="text-sm">{activity.message}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {activity.time}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{activity.time}</p>
                 </div>
               </div>
             )

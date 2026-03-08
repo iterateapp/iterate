@@ -5,7 +5,6 @@ import { ChevronDown, Zap } from "lucide-react"
 
 const navItems = [
   { label: "Dashboard", href: "/" },
-  { label: "Data Sources", href: "/data-sources" },
 ]
 
 export function Header({ currentPath }: { currentPath?: string }) {
