@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Header } from "@/components/dashboard/header"
 import { IntegrationCard } from "@/components/data-sources/integration-card"
 import { AmplitudeConnectModal } from "@/components/data-sources/amplitude-connect-modal"
 import { ImportedEventsPanel } from "@/components/data-sources/imported-events-panel"
@@ -60,9 +59,7 @@ export default function DataSourcesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header currentPath="/data-sources" />
-      <main className="mx-auto max-w-[1200px] px-8 py-8">
+    <div className="mx-auto max-w-[1200px] px-8 py-8">
         <div className="mb-8">
           <h1 className="text-xl font-semibold tracking-tight">
             Data Sources
@@ -117,7 +114,6 @@ export default function DataSourcesPage() {
           onOpenChange={setModalOpen}
           onConnect={handleConnect}
         />
-      </main>
     </div>
   )
 }

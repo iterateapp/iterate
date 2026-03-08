@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Header } from "@/components/dashboard/header"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
 import { experiments, features, repoInfo, type ExperimentStatus } from "@/lib/mock-data"
@@ -29,9 +28,7 @@ const stats = [
 
 export default function ResultsPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header currentPath="/" />
-      <main className="mx-auto max-w-[1200px] px-8 py-8">
+    <div className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/results" />
 
         <div className="mt-8 mb-6 flex items-center gap-2.5">
@@ -189,8 +186,6 @@ export default function ResultsPage() {
             </div>
           </section>
         )}
-
-      </main>
     </div>
   )
 }
