@@ -26,19 +26,11 @@ Adobe Target、Persado、DCO（Dynamic Creative Optimization）——
 
 ## Iterateとは何か
 
-**定量データ（analytics）を起点に、AIが仮説を立て、ユーザーインタビューで検証し、A〜Zテストのタスクに変換するループを自動化するツール。**
+**定量データ（analytics）を起点に、AIが自動でInsightを検知・調査し、ユーザーインタビューで検証し、PRDを自動生成してLinearにタスクを積み、SymphonyがコーディングエージェントにPRを自動実装させる——プロダクト改善のフルループを自動化するツール。**
 
-```
-Amplitude（定量）
-    ↓
-[仮説生成]  PMがAIと壁打ちし、インタビュー設計 or A-Zテスト設計を作る
-    ↓
-[AIインタビュー]  AIが実ユーザーにインタビューし、定性データを収集する
-    ↓
-[タスク生成]  インタビュー結果からタスクを自動生成し、Linear/GitHubに登録する
-```
+![Iterateプロダクト改善フルループ](./images/product-flow.png)
 
-各フェーズは**TOML形式のファイルでインターフェース**し、人間がゲートで承認/修正できる。
+各フェーズは**共有PostgreSQL DBのエンティティ**でつながり、人間がゲートで承認/修正できる。
 自動でも手動でも流せる、**Human in the loop**設計。
 
 ---
@@ -57,19 +49,7 @@ Amplitude（定量）
 
 ### ポジショニング
 
-```
-                         │ アクション実行力
-                         │          高
-                         │
-    Iterate（目標）  ●    │
-                         │
-Sprig ●    Optimizely ●  │
-                         │
-Amplitude ●              │  Outset ●
-                         │
-                         └────────────────── 定性データの深さ
-                               低         高
-```
+![競合ポジショニングマトリクス](./images/competitive-matrix.png)
 
 ---
 
@@ -87,13 +67,15 @@ Amplitude ●              │  Outset ●
 
 ### After Iterate
 
-1. AmplitudeのデータをIterateに繋ぐ（初回セットアップのみ）
-2. AIが「CTR 0.8%が気になります。原因仮説を一緒に考えますか？」と聞いてくる
-3. PMとAIが5分間チャットして仮説を絞る→ `hypothesis.toml` が自動生成
-4. AIが50人のユーザーに自動インタビュー（所要時間：1日）
-5. 結果：「78%がTab Bの存在に気づいていない」→ `results.toml` 生成
-6. AIが「UI視認性の改善」として3タスクをLinearに自動作成
-7. ループ全体：**2〜3日**
+1. AmplitudeをIterateに接続（初回セットアップのみ）
+2. AIが自動でInsightを検知：「モバイル離脱率+15%」（status: detected）
+3. AIが自動調査：「新決済フローのStep 3→4で離脱集中、信頼度87%」（status: investigating → resolved）
+4. AIが影響ユーザーにインタビューを自動送付（20人 → 12人が回答）
+5. 定量+定性を統合：Recommendationを自動生成「5ステップ→2ステップに短縮、月$45K回復」
+6. PMが承認（status: approved）→ PRDを自動生成
+7. PRDをタスク分解 → Linear同期 → Symphony がLinearをポーリング → コーディングエージェントがPR作成
+8. リリース後、Experimentを作成 → Amplitudeで結果を参照 → 次のInsightへ
+9. ループ全体：**2〜3日**（実装まで含む）
 
 ---
 
@@ -112,7 +94,7 @@ Amplitude ●              │  Outset ●
 
 - Phase 1は競合が完全に空白の領域（「Amplitudeデータ×AIとの壁打ち」）
 - Phase 2はOutset等でプルーフ済みの市場、TOMLで独立APIとしても提供可能
-- Phase 3（Linear/GitHub連携）は初期ユーザーの行動データを見てから繋げる
+- Phase 3（Linear連携）は初期ユーザーの行動データを見てから繋げる
 
 ---
 

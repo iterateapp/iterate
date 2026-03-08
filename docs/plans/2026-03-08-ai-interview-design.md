@@ -4,16 +4,30 @@ Date: 2026-03-08
 
 ## Overview
 
-Phase 2 of the Iterate product loop. A web-based AI voice interview app where an AI agent conducts user interviews based on a pre-defined question list (TOML config from Phase 1). Users access the interview via a unique URL. No authentication required for interviewees.
+Phase 2 (Research) of the Iterate product loop. A web-based AI voice interview app where an AI agent conducts user interviews based on questions generated from an Insight. Users access the interview via a unique URL. No authentication required for interviewees.
 
 ## System Context
 
+![AIインタビューシステム構成](../images/interview-system.png)
+
 ```
-Phase 1 (PM + AI chat) → config_toml → Supabase
-                                            ↓ session_id in URL
-Phase 2 (this app)     → /interview/[sessionId] → AI voice interview → results_toml → Supabase
-                                                                                           ↓
-Phase 3 (task creator) ← results_toml
+Phase 1: Discovery
+  Connection(Amplitude) → Insight (status: detected → investigating → resolved)
+                               │
+                               │ insightId
+                               ▼
+Phase 2: Research (this app)
+  Interview (linked to Insight)
+    → Users access /interview/[interviewId]
+    → AI voice interview via LiveKit
+    → InterviewResponse × N
+    → Recommendation (定量 + 定性を統合)
+                               │
+                               │ recommendationId
+                               ▼
+Phase 3: PRD (別サービス)
+  PRD ← Recommendation
+    → Task → Linear → Symphony → GitHub PR
 ```
 
 ## Architecture
@@ -23,11 +37,11 @@ Phase 3 (task creator) ← results_toml
 ```
 apps/
   web/                                        # Next.js (existing)
-    app/interview/[sessionId]/
+    app/interview/[interviewId]/
       page.tsx                                # Public interview page
       loading.tsx
     app/api/interview/join/route.ts           # POST: create LiveKit room, return token
-  interview-agent/                            # New Node.js app
+  interview-agent/                            # Node.js LiveKit agent worker
     src/
       index.ts                                # Hono HTTP server (health + dispatch)
       agent.ts                                # LiveKit agent entry point
@@ -38,111 +52,114 @@ apps/
       application/
         interviewRunner.ts                    # Question loop orchestration
 packages/
-  database/                                   # Supabase client + schema helpers
-  shared/                                     # TOML type definitions (InterviewConfig, InterviewResults)
+  db/                                         # Prismaスキーマ・クライアント・マイグレーション
+  types/                                      # 共通型定義
 ```
 
 ### Request Flow
 
-1. Interviewee opens `/interview/[sessionId]`
-2. Next.js fetches session from Supabase → validates (exists, not expired, pending/in_progress)
-3. User clicks "インタビューを開始" → POST `/api/interview/join` with `sessionId`
+1. Interviewee opens `/interview/[interviewId]`
+2. Next.js fetches Interview from DB → validates (exists, not expired, status: pending/in_progress)
+3. User clicks "インタビューを開始" → POST `/api/interview/join` with `interviewId`
 4. API route:
-   - Reads `config_toml` from Supabase
-   - Creates LiveKit room with `sessionId` as room name
-   - Embeds `config_toml` as room metadata
-   - Updates session status to `in_progress`
+   - Reads Interview (including questions) from DB
+   - Creates LiveKit room with `interviewId` as room name
+   - Embeds questions JSON as room metadata
+   - Updates Interview status to `in_progress`
    - Returns `{ livekitUrl, accessToken }`
 5. Frontend connects to LiveKit room via `livekit-client`
 6. LiveKit dispatches job to `interview-agent` worker
-7. Agent parses `config_toml` from job metadata
+7. Agent parses questions from job metadata
 8. Agent conducts interview: question loop using Google STT → GPT-4o → Fish Audio TTS
-9. On completion: agent saves `results_toml` to Supabase, marks session `completed`
+9. On completion: agent saves InterviewResponse records to DB, updates Interview status to `completed`
 
-## Database Schema (Supabase)
+## Database Schema
 
 ```sql
-CREATE TYPE interview_status AS ENUM ('pending', 'in_progress', 'completed', 'expired');
+-- Prisma schema (packages/db/schema.prisma)
 
-CREATE TABLE interview_sessions (
-  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  config_toml   text NOT NULL,         -- Phase 1 output
-  results_toml  text,                  -- Phase 2 output (nullable until complete)
-  status        interview_status NOT NULL DEFAULT 'pending',
-  expires_at    timestamptz NOT NULL,
-  created_at    timestamptz NOT NULL DEFAULT now()
-);
+model Interview {
+  id            String    @id @default(cuid())
+  insightId     String
+  insight       Insight   @relation(fields: [insightId], references: [id])
+  status        InterviewStatus @default(PENDING)
+  targetCount   Int
+  sentCount     Int        @default(0)
+  responseCount Int        @default(0)
+  questions     Json       -- [{ id, text }]
+  expiresAt     DateTime
+  createdAt     DateTime   @default(now())
+  responses     InterviewResponse[]
+}
+
+enum InterviewStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+model InterviewResponse {
+  id            String    @id @default(cuid())
+  interviewId   String
+  interview     Interview @relation(fields: [interviewId], references: [id])
+  respondentId  String    -- user ID or anonymous ID
+  answers       Json      -- [{ questionId, question, answerSummary, fullTranscript }]
+  sentiment     String?
+  durationSec   Int?
+  createdAt     DateTime  @default(now())
+}
 ```
 
-No RLS required (server-side access only; public URL validation done in API route).
+## Agent Internal Format
 
-## TOML Formats
+インタビューエージェント内部でのみ使用するデータ構造（DBとの変換はAPI route側で行う）。
 
-### Input: config_toml (Phase 1 → Phase 2)
+### Questions (LiveKit room metadata として渡す)
 
-```toml
-[interview]
-title = "機能Xユーザーヒアリング"
-language = "ja"
-interviewer_name = "AIインタビュアー"
-
-[[questions]]
-id = "q1"
-text = "現在の○○機能をどのように使っていますか？"
-
-[[questions]]
-id = "q2"
-text = "特に困っている点や改善してほしい点はありますか？"
+```json
+{
+  "interviewId": "clxxx",
+  "language": "ja",
+  "interviewerName": "AIインタビュアー",
+  "questions": [
+    { "id": "q1", "text": "現在の○○機能をどのように使っていますか？" },
+    { "id": "q2", "text": "特に困っている点や改善してほしい点はありますか？" }
+  ]
+}
 ```
 
-### Output: results_toml (Phase 2 → Phase 3)
+### Answer (InterviewResponse.answers の各要素)
 
-```toml
-[session]
-session_id = "uuid-here"
-title = "機能Xユーザーヒアリング"
-completed_at = "2026-03-08T12:00:00Z"
-duration_seconds = 420
-
-[[answers]]
-question_id = "q1"
-question = "現在の○○機能をどのように使っていますか？"
-answer_summary = "週次レポート作成時に主に使用。データエクスポート機能を活用。"
-full_transcript = """
-Agent: 現在の○○機能をどのように使っていますか？
-User: 主に週次レポートを作るときに使っています。
-"""
-
-[[answers]]
-question_id = "q2"
-question = "特に困っている点や改善してほしい点はありますか？"
-answer_summary = "フィルタリング機能が不十分。日付範囲指定を改善してほしい。"
-full_transcript = """
-Agent: 特に困っている点や改善してほしい点はありますか？
-User: フィルターがもう少し細かく設定できるといいですね。
-"""
+```json
+{
+  "questionId": "q1",
+  "question": "現在の○○機能をどのように使っていますか？",
+  "answerSummary": "週次レポート作成時に主に使用。データエクスポート機能を活用。",
+  "fullTranscript": "Agent: 現在の...\nUser: 主に週次レポートを..."
+}
 ```
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 16 (apps/web) |
+| Frontend | Next.js 15 (apps/web) |
 | Real-time audio | LiveKit Cloud |
 | Agent framework | @livekit/agents (Node.js) |
 | LLM | OpenAI GPT-4o |
 | STT | Google Cloud Speech-to-Text |
 | TTS | Fish Audio (custom adapter) |
-| Database | Supabase (PostgreSQL) |
+| Database | PostgreSQL (Supabase) + Prisma |
 | Package manager | pnpm workspaces |
 
 ## Interview Agent Logic
 
 ```
 on_job_start:
-  1. Parse config_toml from room metadata
+  1. Parse questions from room metadata
   2. Greet interviewee ("本日はよろしくお願いします。〜についていくつかお聞きします。")
-  3. for each question in config_toml.questions:
+  3. for each question in questions:
        a. Ask question via TTS
        b. Listen for response (Google STT, with silence detection to detect end-of-answer)
        c. Append to transcript
@@ -151,15 +168,15 @@ on_job_start:
   5. Disconnect from room
 
 on_disconnect:
-  1. Build results_toml from collected transcripts
-  2. POST to Next.js API / direct Supabase write
-  3. Update session status to 'completed'
+  1. Build answers array from collected transcripts
+  2. POST to Next.js API → save InterviewResponse to DB
+  3. Update Interview status to 'completed', increment responseCount
 ```
 
 ## Frontend UI States
 
 - `loading`: セッション情報取得中
-- `invalid`: セッション無効（期限切れ or 存在しない）
+- `invalid`: Interview無効（期限切れ or 存在しない）
 - `completed`: インタビュー済み
 - `idle`: 開始ボタン表示
 - `connecting`: LiveKit接続中
@@ -178,8 +195,7 @@ voiceagent-v3 の `ElevenLabsTtsAdapter` と同パターンで実装：
 ### apps/web
 ```
 NEXT_PUBLIC_LIVEKIT_URL=
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=
 LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
 ```
@@ -193,8 +209,7 @@ OPENAI_API_KEY=
 GOOGLE_CLOUD_CREDENTIALS=   # JSON keyfile path or content
 FISH_AUDIO_API_KEY=
 FISH_AUDIO_VOICE_ID=
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=
 PORT=4444
 ```
 
@@ -202,10 +217,11 @@ PORT=4444
 
 Independent tasks that can be implemented in parallel:
 
-1. **DB + shared package** — Supabase schema, migration, TOML type defs
-2. **Next.js interview page** — UI, session fetch, LiveKit connection
-3. **Next.js API route** — `/api/interview/join`, LiveKit room creation
-4. **interview-agent skeleton** — Agent worker, Hono health server
-5. **Fish Audio TTS adapter** — Custom TTS implementation
-6. **Google Cloud STT adapter** — Custom STT implementation
-7. **Interview runner** — Question loop orchestration logic
+1. **packages/db** — Prismaスキーマ定義・マイグレーション（Interview, InterviewResponse）
+2. **packages/types** — 共通型定義
+3. **Next.js interview page** — UI, Interview fetch, LiveKit connection
+4. **Next.js API route** — `/api/interview/join`, LiveKit room creation
+5. **interview-agent skeleton** — Agent worker, Hono health server
+6. **Fish Audio TTS adapter** — Custom TTS implementation
+7. **Google Cloud STT adapter** — Custom STT implementation
+8. **Interview runner** — Question loop orchestration logic

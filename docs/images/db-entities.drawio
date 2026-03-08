@@ -1,0 +1,194 @@
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="DB Entities" id="db-entities">
+    <mxGraphModel dx="1024" dy="768" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1100" pageHeight="720" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="DBエンティティ設計とフェーズ対応"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="10" width="1000" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Organization -->
+        <mxCell id="org" value="Organization&#xa;──────────────&#xa;id&#xa;name&#xa;createdAt"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="30" y="55" width="160" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- User -->
+        <mxCell id="usr" value="User&#xa;──────────────&#xa;id&#xa;organizationId&#xa;email&#xa;role"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="230" y="55" width="160" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Product -->
+        <mxCell id="prod" value="Product&#xa;──────────────&#xa;id&#xa;organizationId&#xa;name&#xa;description"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="430" y="55" width="160" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Connection -->
+        <mxCell id="conn" value="Connection&#xa;──────────────&#xa;id&#xa;productId&#xa;type (amplitude/linear/github)&#xa;config: JSON&#xa;status"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="660" y="40" width="200" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows: Org -> User, Org -> Product -->
+        <mxCell id="r1" value="1:N"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="org" target="usr" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="1:N"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="org" target="prod" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="1:N"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="prod" target="conn" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Phase labels band -->
+        <mxCell id="phase1Label" value="Phase 1: Discovery"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="30" y="200" width="160" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Insight -->
+        <mxCell id="ins" value="Insight&#xa;──────────────&#xa;id, productId, connectionId&#xa;status: detected/investigating/resolved&#xa;metric, value, observation&#xa;summary, findings: JSON&#xa;confidence&#xa;createdAt, resolvedAt"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="30" y="240" width="260" height="130" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: Product -> Insight -->
+        <mxCell id="r4" value="1:N"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;"
+          edge="1" source="prod" target="ins" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Phase 2 label -->
+        <mxCell id="phase2Label" value="Phase 2: Research"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="330" y="200" width="160" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Interview -->
+        <mxCell id="intv" value="Interview&#xa;──────────────&#xa;id, insightId&#xa;status: pending/active/completed&#xa;targetCount, sentCount&#xa;responseCount&#xa;questions: JSON"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="330" y="240" width="220" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- InterviewResponse -->
+        <mxCell id="resp" value="InterviewResponse&#xa;──────────────&#xa;id, interviewId&#xa;respondentId&#xa;answers: JSON&#xa;sentiment&#xa;createdAt"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="330" y="390" width="220" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Recommendation -->
+        <mxCell id="rec" value="Recommendation&#xa;──────────────&#xa;id, insightId&#xa;title, description&#xa;impact, confidence, effort&#xa;estimatedValue&#xa;status: draft/approved/rejected"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="590" y="240" width="240" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows in Phase 2 -->
+        <mxCell id="r5" value="1:1"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="ins" target="intv" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r6" value="1:N"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="intv" target="resp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r7" value="1:1"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="ins" target="rec" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Phase 3 label -->
+        <mxCell id="phase3Label" value="Phase 3: PRD"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="590" y="390" width="120" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- PRD -->
+        <mxCell id="prd" value="PRD&#xa;──────────────&#xa;id, recommendationId&#xa;content: text (Markdown)&#xa;status: draft/approved&#xa;createdAt, approvedAt"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="590" y="430" width="240" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r8" value="1:1"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="rec" target="prd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Phase 4 label -->
+        <mxCell id="phase4Label" value="Phase 4: Action"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="200" width="160" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Task -->
+        <mxCell id="task" value="Task&#xa;──────────────&#xa;id, prdId&#xa;title, description&#xa;linearIssueId, linearUrl&#xa;githubPrId, githubPrUrl&#xa;status: pending/in_progress/review/done"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="240" width="210" height="130" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r9" value="1:N"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;"
+          edge="1" source="prd" target="task" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Phase 5 label -->
+        <mxCell id="phase5Label" value="Phase 5: Experiment"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="400" width="160" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Experiment -->
+        <mxCell id="exp" value="Experiment&#xa;──────────────&#xa;id, productId&#xa;taskIds: string[]&#xa;amplitudeEventKey&#xa;status: running/completed&#xa;results: JSON&#xa;startedAt, completedAt"
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;align=left;spacingLeft=8;fontFamily=Courier New;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="440" width="210" height="130" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r10" value="1:N"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;html=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;"
+          edge="1" source="prod" target="exp" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="510" y="600"/>
+              <mxPoint x="975" y="600"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
