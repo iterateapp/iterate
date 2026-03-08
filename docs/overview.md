@@ -26,7 +26,7 @@ Adobe Target、Persado、DCO（Dynamic Creative Optimization）——
 
 ## Iterateとは何か
 
-**定量データ（analytics）を起点に、AIが仮説を立て、ユーザーインタビューで検証し、A〜Zテストのタスクに変換するループを自動化するツール。**
+**定量データ（analytics）を起点に、AIが仮説を立て、ユーザーインタビューで検証し、Linearにタスクを積み、SymphonyがコーディングエージェントにPRを自動実装させる——プロダクト改善のフルループを自動化するツール。**
 
 ```
 Amplitude（定量）
@@ -35,7 +35,9 @@ Amplitude（定量）
     ↓
 [AIインタビュー]  AIが実ユーザーにインタビューし、定性データを収集する
     ↓
-[タスク生成]  インタビュー結果からタスクを自動生成し、Linear/GitHubに登録する
+[タスク生成]  インタビュー結果からタスクを自動生成し、Linearに登録する
+    ↓
+[自動実装]  Symphony（~/dev/kanban）がLinearを監視し、コーディングエージェントがPRを作成する
 ```
 
 各フェーズは**TOML形式のファイルでインターフェース**し、人間がゲートで承認/修正できる。
@@ -93,7 +95,8 @@ Amplitude ●              │  Outset ●
 4. AIが50人のユーザーに自動インタビュー（所要時間：1日）
 5. 結果：「78%がTab Bの存在に気づいていない」→ `results.toml` 生成
 6. AIが「UI視認性の改善」として3タスクをLinearに自動作成
-7. ループ全体：**2〜3日**
+7. Symphony（`~/dev/kanban`）がLinearをポーリングしてタスクを検知 → コーディングエージェントがPRを自動作成
+8. ループ全体：**2〜3日**（実装まで含む）
 
 ---
 
@@ -112,7 +115,7 @@ Amplitude ●              │  Outset ●
 
 - Phase 1は競合が完全に空白の領域（「Amplitudeデータ×AIとの壁打ち」）
 - Phase 2はOutset等でプルーフ済みの市場、TOMLで独立APIとしても提供可能
-- Phase 3（Linear/GitHub連携）は初期ユーザーの行動データを見てから繋げる
+- Phase 3（Linear連携）は初期ユーザーの行動データを見てから繋げる
 
 ---
 
