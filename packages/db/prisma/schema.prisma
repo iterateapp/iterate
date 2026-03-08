@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Interview {
+  id            String            @id @default(cuid())
+  insightId     String
+  status        InterviewStatus   @default(PENDING)
+  targetCount   Int
+  sentCount     Int               @default(0)
+  responseCount Int               @default(0)
+  questions     Json              // [{ id: string, text: string }]
+  expiresAt     DateTime
+  createdAt     DateTime          @default(now())
+  responses     InterviewResponse[]
+}
+
+enum InterviewStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+model InterviewResponse {
+  id           String    @id @default(cuid())
+  interviewId  String
+  interview    Interview @relation(fields: [interviewId], references: [id])
+  respondentId String
+  answers      Json      // InterviewAnswer[]
+  sentiment    String?
+  durationSec  Int?
+  createdAt    DateTime  @default(now())
+}
