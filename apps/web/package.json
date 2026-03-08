@@ -12,6 +12,7 @@
   "dependencies": {
     "@iterate/db": "workspace:*",
     "@iterate/types": "workspace:*",
+    "@prisma/client": "^6.19.2",
     "livekit-client": "^2",
     "livekit-server-sdk": "^2",
     "lucide-react": "^0.469.0",

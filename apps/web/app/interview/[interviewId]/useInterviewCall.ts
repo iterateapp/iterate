@@ -22,7 +22,7 @@ export interface TranscriptEntry {
   isFinal: boolean;
 }
 
-export function useInterviewCall(sessionId: string) {
+export function useInterviewCall(interviewId: string) {
   const [callState, setCallState] = useState<CallState>('idle');
   const [isMuted, setIsMuted] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -86,7 +86,7 @@ export function useInterviewCall(sessionId: string) {
       const res = await fetch('/api/interview/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ interviewId }),
       });
 
       if (!res.ok) {

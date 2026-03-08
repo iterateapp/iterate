@@ -1,25 +1,30 @@
 import { notFound } from 'next/navigation';
-import { createDbClient } from '@iterate/database';
-import { parseInterviewConfig } from '@iterate/shared';
+import { PrismaClient } from '@iterate/db';
 import { InterviewRoom } from './InterviewRoom';
 
+const prisma = new PrismaClient();
+
 interface Props {
-  params: Promise<{ sessionId: string }>;
+  params: Promise<{ interviewId: string }>;
 }
 
 export default async function InterviewPage({ params }: Props) {
-  const { sessionId } = await params;
+  const { interviewId } = await params;
 
-  const db = createDbClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const interview = await prisma.interview.findUnique({
+    where: { id: interviewId },
+  });
 
-  const session = await db.getSession(sessionId);
+  if (!interview) return notFound();
 
-  if (!session) return notFound();
+  if (new Date(interview.expiresAt) < new Date() && interview.status === 'PENDING') {
+    await prisma.interview.update({
+      where: { id: interviewId },
+      data: { status: 'EXPIRED' },
+    });
+  }
 
-  if (session.status === 'expired') {
+  if (interview.status === 'EXPIRED') {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-500">このインタビューの有効期限が切れています。</p>
@@ -27,7 +32,7 @@ export default async function InterviewPage({ params }: Props) {
     );
   }
 
-  if (session.status === 'completed') {
+  if (interview.status === 'COMPLETED') {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-500">このインタビューはすでに完了しています。ありがとうございました。</p>
@@ -35,15 +40,13 @@ export default async function InterviewPage({ params }: Props) {
     );
   }
 
-  const config = parseInterviewConfig(session.config_toml);
-
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <header className="border-b bg-white px-6 py-4">
-        <h1 className="text-lg font-semibold text-gray-900">{config.interview.title}</h1>
+        <h1 className="text-lg font-semibold text-gray-900">ユーザーインタビュー</h1>
       </header>
       <main className="flex flex-1 items-center justify-center p-6">
-        <InterviewRoom sessionId={sessionId} title={config.interview.title} />
+        <InterviewRoom interviewId={interviewId} />
       </main>
     </div>
   );
