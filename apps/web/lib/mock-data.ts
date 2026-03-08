@@ -88,25 +88,118 @@ export const funnelData: FunnelStep[] = [
 ]
 
 // ---------------------------------------------------------------------------
-// Step 1 — Data: Qualitative
+// Step 1 — Data: Qualitative — User Interviews & Responses
 // ---------------------------------------------------------------------------
 export type Sentiment = "positive" | "negative" | "mixed"
+export type UserInterviewStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED"
 
-export interface Interview {
-  user: string
-  quote: string
-  date: string
-  sentiment: Sentiment
-  topic: string
+export interface InterviewQuestion {
+  id: string
+  text: string
 }
 
-export const interviews: Interview[] = [
-  { user: "User #2847", quote: "I spend 10 minutes scrolling but can never find creators I actually like. The recommendations feel completely random.", date: "Mar 5", sentiment: "negative", topic: "Discovery" },
-  { user: "User #1923", quote: "I got 47 notifications in one day. I just turned them all off. Now I miss important updates from creators I follow.", date: "Mar 4", sentiment: "negative", topic: "Notifications" },
-  { user: "User #3102", quote: "After signing up I had no idea what to do. The onboarding asked me about categories I've never heard of.", date: "Mar 3", sentiment: "negative", topic: "Onboarding" },
-  { user: "User #4521", quote: "Search works fine if I know the exact name, but I can't explore by topic or style at all.", date: "Mar 2", sentiment: "mixed", topic: "Search" },
-  { user: "User #1087", quote: "I love the personalized feed since the last update! It's exactly what I want to see every time I open the app.", date: "Mar 1", sentiment: "positive", topic: "Feed" },
+export interface InterviewResponse {
+  id: string
+  interviewId: string
+  respondentId: string
+  quote: string
+  sentiment: Sentiment
+  date: string
+  topic: string
+  durationSec?: number
+}
+
+export interface UserInterview {
+  id: string
+  insightId: string
+  status: UserInterviewStatus
+  targetCount: number
+  sentCount: number
+  responseCount: number
+  questions: InterviewQuestion[]
+  createdAt: string
+  responses: InterviewResponse[]
+}
+
+export const userInterviewStatusConfig: Record<UserInterviewStatus, { label: string; color: string }> = {
+  PENDING: { label: "Pending", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
+  IN_PROGRESS: { label: "In Progress", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300" },
+  COMPLETED: { label: "Completed", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300" },
+  EXPIRED: { label: "Expired", color: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300" },
+}
+
+export const userInterviews: UserInterview[] = [
+  {
+    id: "iv_001",
+    insightId: "ins_001",
+    status: "COMPLETED",
+    targetCount: 20,
+    sentCount: 20,
+    responseCount: 14,
+    questions: [
+      { id: "q1", text: "How was your mobile checkout experience recently?" },
+      { id: "q2", text: "Did you encounter any issues during payment?" },
+    ],
+    createdAt: "5d ago",
+    responses: [
+      { id: "resp_001", interviewId: "iv_001", respondentId: "User #3891", quote: "The payment page reloads every time I switch fields. I gave up after entering my card number twice.", sentiment: "negative", date: "Mar 4", topic: "Checkout", durationSec: 180 },
+      { id: "resp_002", interviewId: "iv_001", respondentId: "User #4102", quote: "I tried Apple Pay but the button didn't work. Ended up using desktop instead.", sentiment: "negative", date: "Mar 4", topic: "Checkout", durationSec: 145 },
+    ],
+  },
+  {
+    id: "iv_002",
+    insightId: "ins_002",
+    status: "COMPLETED",
+    targetCount: 15,
+    sentCount: 15,
+    responseCount: 12,
+    questions: [
+      { id: "q1", text: "How do you currently discover new creators?" },
+      { id: "q2", text: "What frustrates you about the discovery experience?" },
+    ],
+    createdAt: "3d ago",
+    responses: [
+      { id: "resp_003", interviewId: "iv_002", respondentId: "User #2847", quote: "I spend 10 minutes scrolling but can never find creators I actually like. The recommendations feel completely random.", sentiment: "negative", date: "Mar 5", topic: "Discovery", durationSec: 210 },
+      { id: "resp_004", interviewId: "iv_002", respondentId: "User #4521", quote: "Search works fine if I know the exact name, but I can't explore by topic or style at all.", sentiment: "mixed", date: "Mar 2", topic: "Search", durationSec: 165 },
+    ],
+  },
+  {
+    id: "iv_003",
+    insightId: "ins_003",
+    status: "COMPLETED",
+    targetCount: 10,
+    sentCount: 10,
+    responseCount: 7,
+    questions: [
+      { id: "q1", text: "Why did you turn off notifications?" },
+      { id: "q2", text: "What types of notifications would you want to keep?" },
+    ],
+    createdAt: "2d ago",
+    responses: [
+      { id: "resp_005", interviewId: "iv_003", respondentId: "User #1923", quote: "I got 47 notifications in one day. I just turned them all off. Now I miss important updates from creators I follow.", sentiment: "negative", date: "Mar 4", topic: "Notifications", durationSec: 195 },
+    ],
+  },
+  {
+    id: "iv_004",
+    insightId: "ins_004",
+    status: "IN_PROGRESS",
+    targetCount: 12,
+    sentCount: 12,
+    responseCount: 4,
+    questions: [
+      { id: "q1", text: "What was your experience during onboarding?" },
+      { id: "q2", text: "Did the interest categories feel relevant to you?" },
+    ],
+    createdAt: "1d ago",
+    responses: [
+      { id: "resp_006", interviewId: "iv_004", respondentId: "User #3102", quote: "After signing up I had no idea what to do. The onboarding asked me about categories I've never heard of.", sentiment: "negative", date: "Mar 3", topic: "Onboarding", durationSec: 155 },
+      { id: "resp_007", interviewId: "iv_004", respondentId: "User #1087", quote: "I love the personalized feed since the last update! It's exactly what I want to see every time I open the app.", sentiment: "positive", date: "Mar 1", topic: "Feed", durationSec: 200 },
+    ],
+  },
 ]
+
+// Flat list of all responses for convenience
+export const interviewResponses: InterviewResponse[] = userInterviews.flatMap(iv => iv.responses)
 
 export interface SupportTheme {
   theme: string
@@ -168,10 +261,9 @@ export interface LifecycleInsight {
   metric: string
   source: string
   detectedAt: string
-  topics: string[] // links to Interview.topic and SupportTheme.theme
+  topics: string[] // links to InterviewResponse.topic and SupportTheme.theme
   confidence?: number
-  interviewsSent?: number
-  interviewsResponded?: number
+  interviewId?: string // links to UserInterview
   prdGenerated?: boolean
   taskCount?: number
   messages: InsightMessage[]
@@ -187,8 +279,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     detectedAt: "5d ago",
     topics: [],
     confidence: 92,
-    interviewsSent: 20,
-    interviewsResponded: 14,
+    interviewId: "iv_001",
     prdGenerated: true,
     taskCount: 6,
     messages: [
@@ -210,8 +301,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     detectedAt: "3d ago",
     topics: ["Discovery"],
     confidence: 86,
-    interviewsSent: 15,
-    interviewsResponded: 12,
+    interviewId: "iv_002",
     messages: [
       { id: "m_002_1", role: "ai", content: "**Anomaly detected:** Discovery page drop-off is 68%. Users spend only 14s before leaving — 13.7x lower than curated feeds.", timestamp: "3d ago" },
       { id: "m_002_2", role: "ai", content: "Investigation complete. Core issue: **zero personalization** in discovery algorithm. Shows globally trending creators regardless of user preferences.\n\n- 14s avg session vs 3.2min on curated feeds\n- 23 support tickets about discovery quality\n- Users who discover a creator have **4.1x higher** 30-day retention\n\nSending 15 interview requests.", timestamp: "3d ago" },
@@ -229,8 +319,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     detectedAt: "2d ago",
     topics: ["Notifications"],
     confidence: 79,
-    interviewsSent: 10,
-    interviewsResponded: 7,
+    interviewId: "iv_003",
     messages: [
       { id: "m_003_1", role: "ai", content: "**Anomaly detected:** Push notification opt-out rate is 42% within 7 days — 3x industry average (~14%). Investigating.", timestamp: "2d ago" },
       { id: "m_003_2", role: "ai", content: "Findings:\n\n- Users receive **47 notifications/day** (8x recommended)\n- **No preference controls** — all or nothing\n- Opt-out users have **2.8x lower** 30-day retention\n\nSending 10 interview requests to recent opt-out users.", timestamp: "2d ago" },
@@ -248,8 +337,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     detectedAt: "1d ago",
     topics: ["Onboarding"],
     confidence: 64,
-    interviewsSent: 12,
-    interviewsResponded: 4,
+    interviewId: "iv_004",
     messages: [
       { id: "m_004_1", role: "ai", content: "**Anomaly detected:** Onboarding completion is 34%. Step 3 (interest selection) has 52% abandonment. Completers have **4.2x higher** 30-day retention.", timestamp: "1d ago" },
       { id: "m_004_2", role: "ai", content: "Investigating. Initial findings:\n\n- Users spend **8 seconds** on Step 3 before leaving\n- Only 6 broad interest categories\n- Users selecting 3+ interests have **67% higher** engagement\n\nSent 12 interviews — 4 returned so far. Confidence: **64%**.", timestamp: "1d ago" },
