@@ -28,19 +28,7 @@ Adobe Target、Persado、DCO（Dynamic Creative Optimization）——
 
 **定量データ（analytics）を起点に、AIが自動でInsightを検知・調査し、ユーザーインタビューで検証し、PRDを自動生成してLinearにタスクを積み、SymphonyがコーディングエージェントにPRを自動実装させる——プロダクト改善のフルループを自動化するツール。**
 
-```
-Amplitude（定量）
-    ↓
-[Discovery]  AIが自動でInsightを検知・調査（severity, confidence を自動算出）
-    ↓
-[Research]   AIが実ユーザーにインタビュー → 定量+定性を統合しRecommendationを生成
-    ↓
-[PRD]        RecommendationからPRDを自動生成（別サービス）
-    ↓
-[Action]     PRDをタスク分解 → Linear同期 → Symphony → コーディングエージェントがPR作成
-    ↓
-[Experiment] リリース後、Amplitudeで結果を参照 → 次のInsightへ
-```
+![Iterateプロダクト改善フルループ](./images/product-flow.png)
 
 各フェーズは**共有PostgreSQL DBのエンティティ**でつながり、人間がゲートで承認/修正できる。
 自動でも手動でも流せる、**Human in the loop**設計。
@@ -61,19 +49,7 @@ Amplitude（定量）
 
 ### ポジショニング
 
-```
-                         │ アクション実行力
-                         │          高
-                         │
-    Iterate（目標）  ●    │
-                         │
-Sprig ●    Optimizely ●  │
-                         │
-Amplitude ●              │  Outset ●
-                         │
-                         └────────────────── 定性データの深さ
-                               低         高
-```
+![競合ポジショニングマトリクス](./images/competitive-matrix.png)
 
 ---
 

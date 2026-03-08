@@ -1,0 +1,130 @@
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="Competitive Matrix" id="competitive-matrix">
+    <mxGraphModel dx="1024" dy="768" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="700" pageHeight="650" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="競合ポジショニングマトリクス"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="10" width="600" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="bg" value=""
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#CCCCCC;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="55" width="540" height="500" as="geometry"/>
+        </mxCell>
+        <mxCell id="yLabel" value="アクション実行力（高）"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rotation=-90;fontSize=12;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="-10" y="200" width="160" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="yLabelLow" value="（低）"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rotation=-90;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="-10" y="460" width="80" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="xLabel" value="（低）　定性データの深さ　（高）"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="565" width="540" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="vAxis" value=""
+          style="endArrow=open;endFill=0;endSize=8;strokeWidth=2;strokeColor=#333333;html=1;"
+          edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="350" y="545" as="sourcePoint"/>
+            <mxPoint x="350" y="65" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hAxis" value=""
+          style="endArrow=open;endFill=0;endSize=8;strokeWidth=2;strokeColor=#333333;html=1;"
+          edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="90" y="305" as="sourcePoint"/>
+            <mxPoint x="610" y="305" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="q1" value=""
+          style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF9F0;strokeColor=none;opacity=60;"
+          vertex="1" parent="1">
+          <mxGeometry x="350" y="55" width="270" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="q1label" value="✨ 理想ゾーン"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#888888;fontStyle=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="430" y="65" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="amplitude" value="Amplitude"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#FF8800;strokeColor=#CC6600;fontColor=#FFFFFF;fontSize=11;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="130" y="400" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="mixpanel" value="Mixpanel"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#FF8800;strokeColor=#CC6600;fontColor=#FFFFFF;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="155" y="460" width="90" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="outset" value="Outset"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#6C8EBF;strokeColor=#3B5998;fontColor=#FFFFFF;fontSize=11;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="490" y="410" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="listenlabs" value="Listen Labs"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#6C8EBF;strokeColor=#3B5998;fontColor=#FFFFFF;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="420" y="460" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="sprig" value="Sprig"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#82B366;strokeColor=#4D7A3A;fontColor=#FFFFFF;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="220" y="245" width="90" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="opt" value="Optimizely"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#82B366;strokeColor=#4D7A3A;fontColor=#FFFFFF;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="130" y="215" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="pb" value="Productboard"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#9673A6;strokeColor=#6A3D84;fontColor=#FFFFFF;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="310" y="260" width="110" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="iterate" value="⭐ Iterate&#xa;（目標）"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#D6052A;strokeColor=#A00020;fontColor=#FFFFFF;fontSize=12;fontStyle=1;strokeWidth=3;"
+          vertex="1" parent="1">
+          <mxGeometry x="460" y="95" width="140" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg" value="凡例"
+          style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="85" y="595" width="50" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FF8800;strokeColor=#CC6600;" vertex="1" parent="1">
+          <mxGeometry x="140" y="596" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1t" value="Analyticsツール" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="160" y="595" width="110" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#6C8EBF;strokeColor=#3B5998;" vertex="1" parent="1">
+          <mxGeometry x="280" y="596" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2t" value="AIインタビュー" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="300" y="595" width="100" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#82B366;strokeColor=#4D7A3A;" vertex="1" parent="1">
+          <mxGeometry x="410" y="596" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3t" value="テスト実行" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="430" y="595" width="80" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D6052A;strokeColor=#A00020;" vertex="1" parent="1">
+          <mxGeometry x="520" y="596" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4t" value="Iterate（目標）" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="595" width="90" height="18" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

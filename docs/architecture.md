@@ -6,29 +6,15 @@
 
 ## 全体構成
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  monorepo (Turborepo)                                     │
-│                                                           │
-│  apps/                                                    │
-│    discovery/    ← Phase 1: Insight検知・AI自動調査        │
-│    research/     ← Phase 2: AIインタビューアプリ            │
-│    prd/          ← Phase 3: PRD自動生成サービス            │
-│    action/       ← Phase 4: タスク生成・Linear/GitHub連携  │
-│    experiment/   ← Phase 5: 実験追跡・Amplitude結果参照    │
-│    web/          ← ダッシュボード                          │
-│                                                           │
-│  packages/                                               │
-│    db/           ← Prismaスキーマ・マイグレーション         │
-│    types/        ← 共通型定義                             │
-└──────────────────────────────────────────────────────────┘
-```
+![Iterateモノレポ構成](./images/monorepo-structure.png)
 
 各サービスは**共有PostgreSQL DBを通じて連携**する。Symphony（`apps/symphony/`）はLinearをポーリングしてGitHub PRを自動作成する。
 
 ---
 
 ## DBエンティティ設計
+
+![DBエンティティ設計とフェーズ対応](./images/db-entities.png)
 
 ### Organization / User / Product / Connection（初期セットアップ）
 
