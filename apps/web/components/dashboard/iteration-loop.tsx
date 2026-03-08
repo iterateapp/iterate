@@ -57,7 +57,7 @@ export function IterationLoop({ currentHref }: { currentHref?: string } = {}) {
                 className={cn(
                   "group flex-1 rounded-xl border p-4 transition-all hover:shadow-sm",
                   styles.card,
-                  isCurrent && "ring-2 ring-foreground/30 shadow-sm"
+                  isCurrent && "ring-2 ring-violet-500 dark:ring-violet-400 shadow-md shadow-violet-500/10 scale-[1.02]"
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -91,17 +91,6 @@ export function IterationLoop({ currentHref }: { currentHref?: string } = {}) {
         })}
       </div>
 
-      {/* Loop-back: 4 → 1 */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <div className="h-px flex-1 bg-border" />
-        <div className="flex items-center gap-1.5 rounded-full border px-3 py-1">
-          <RotateCcw className="size-3" />
-          <span>
-            <span className="font-medium text-foreground">4</span> Results → <span className="font-medium text-foreground">1</span> Data
-          </span>
-        </div>
-        <div className="h-px flex-1 bg-border" />
-      </div>
     </div>
   )
 }

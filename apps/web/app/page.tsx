@@ -11,7 +11,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header currentPath="/" />
-      <main className="mx-auto max-w-6xl space-y-8 px-6 py-8">
+      <main className="mx-auto max-w-[1200px] space-y-8 px-8 py-8">
         <IterationLoop />
 
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

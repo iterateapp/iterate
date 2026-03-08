@@ -46,7 +46,7 @@ export default function DevelopmentPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header currentPath="/" />
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/development" />
 
         <div className="mt-8 mb-8 flex items-center gap-2.5">

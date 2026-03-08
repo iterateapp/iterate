@@ -62,7 +62,7 @@ export default function DataSourcesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header currentPath="/data-sources" />
-      <main className="mx-auto max-w-2xl px-6 py-8">
+      <main className="mx-auto max-w-[1200px] px-8 py-8">
         <div className="mb-8">
           <h1 className="text-xl font-semibold tracking-tight">
             Data Sources
