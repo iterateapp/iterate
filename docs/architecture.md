@@ -24,7 +24,7 @@
 └──────────────────────────────────────────────────────────┘
 ```
 
-各サービスは**共有PostgreSQL DBを通じて連携**する。Symphony（外部サービス）はLinearをポーリングしてGitHub PRを自動作成する。
+各サービスは**共有PostgreSQL DBを通じて連携**する。Symphony（`apps/symphony/`）はLinearをポーリングしてGitHub PRを自動作成する。
 
 ---
 
@@ -181,7 +181,7 @@ Experiment
 │                                                                  │
 │  PRD の内容を Task に分解                                         │
 │    → Connection(Linear) に同期（linearIssueId 取得）              │
-│    → Symphony（~/dev/kanban）が Linear をポーリング               │
+│    → Symphony（apps/symphony/）が Linear をポーリング             │
 │    → コーディングエージェントが PR 作成                             │
 │    → Connection(GitHub) に PR リンクを保存                        │
 │    ※ Linear → Slack 通知は Linear 側の設定で対応                  │
@@ -202,27 +202,35 @@ Experiment
 
 ## Symphony 連携
 
-Symphony（`~/dev/kanban`）は **Iterate の外部サービス** として動作する。
+Symphony（`apps/symphony/`）は **モノレポ内の独立サービス** として動作する。Elixir/OTP 実装。
 
 ```
 Linear（Task作成済み）
       │
-      │ ポーリング
+      │ ポーリング（30秒ごと）
       ▼
-┌─────────────┐
-│  Symphony   │
-│  ~/dev/     │ ── コーディングエージェント起動
-│  kanban     │ ── 隔離ワークスペースで実装
-│             │ ── PR 作成
-└─────────────┘
+┌──────────────────┐
+│  apps/symphony/  │ ── コーディングエージェント起動
+│  (Elixir/OTP)    │ ── issueごとに隔離ワークスペースで実装
+│                  │ ── PR 作成 → Linear を Human Review へ
+└──────────────────┘
       │
       ▼
   GitHub PR
 ```
 
-- Symphony は Linear の特定プロジェクト / ラベルをポーリング
-- Task ごとに隔離されたワークスペースでエージェントを起動
+- `apps/symphony/WORKFLOW.md` で Linear プロジェクト・ポーリング間隔・エージェント設定を管理
+- Task ごとに隔離されたワークスペースでエージェントを起動（並列実行対応）
+- 失敗時はリトライ（指数バックオフ）、完了後は Linear を `Human Review` ステータスに移行
 - PR 作成後、Iterate 側の Task に `githubPrUrl` を書き戻す（Webhook or polling）
+- オプション: `--port 4000` で Phoenix LiveView ダッシュボードを起動
+
+**起動方法：**
+```bash
+cd apps/symphony
+mise exec -- mix setup && mix build
+LINEAR_API_KEY=xxx ./bin/symphony ./WORKFLOW.md --port 4000
+```
 
 ---
 
@@ -237,7 +245,7 @@ Linear（Task作成済み）
 | AI（Research） | OpenAI Realtime API or Claude |
 | AI（PRD・Action） | Anthropic Claude API |
 | 外部連携 | Amplitude API, Linear API, GitHub API |
-| Symphony | ~/dev/kanban（Linear ポーリング → コーディングエージェント） |
+| Symphony | `apps/symphony/`（Elixir/OTP、Railway/Fly.io にデプロイ） |
 | デプロイ | Vercel |
 
 ---
