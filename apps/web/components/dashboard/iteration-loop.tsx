@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { iterationSteps, type LoopStepStatus } from "@/lib/mock-data"
+import { getIterationSteps } from "@/lib/queries"
 import { cn } from "@/lib/utils"
 import {
   Database,
@@ -9,6 +9,8 @@ import {
   ArrowRight,
   RotateCcw,
 } from "lucide-react"
+
+type LoopStepStatus = "complete" | "active" | "pending"
 
 const stepIcons = [Database, Sparkles, Code, BarChart3]
 
@@ -41,7 +43,9 @@ const statusStyles: Record<LoopStepStatus, { card: string; icon: string; badge: 
   },
 }
 
-export function IterationLoop({ currentHref }: { currentHref?: string } = {}) {
+export async function IterationLoop({ currentHref }: { currentHref?: string } = {}) {
+  const iterationSteps = await getIterationSteps()
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
