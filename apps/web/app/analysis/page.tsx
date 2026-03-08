@@ -9,6 +9,7 @@ import {
   insightStatusConfig,
   insightStatusOrder,
   features,
+  userInterviews,
   type InsightStatus,
   type InsightMessage,
 } from "@/lib/mock-data"
@@ -239,12 +240,15 @@ export default function AnalysisPage() {
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                {selected.interviewsSent && (
-                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <MessageSquare className="size-3" />
-                    {selected.interviewsResponded}/{selected.interviewsSent} interviews
-                  </div>
-                )}
+                {selected.interviewId && (() => {
+                  const interview = userInterviews.find(iv => iv.id === selected.interviewId)
+                  return interview ? (
+                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <MessageSquare className="size-3" />
+                      {interview.responseCount}/{interview.sentCount} interviews
+                    </div>
+                  ) : null
+                })()}
                 {selected.prdGenerated && (
                   <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
                     <FileText className="size-3" />

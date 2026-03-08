@@ -6,14 +6,13 @@ import {
   keyMetrics,
   topEvents,
   funnelData,
-  interviews,
+  userInterviews,
+  userInterviewStatusConfig,
   supportThemes,
   npsData,
   dataSources,
-  type Sentiment,
-} from "@/lib/mock-data"
-import {
   lifecycleInsights,
+  type Sentiment,
 } from "@/lib/mock-data"
 import {
   Database,
@@ -38,13 +37,8 @@ const sentimentColor: Record<Sentiment, string> = {
   mixed: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
 }
 
-// Build topic → insight lookup for per-item flow indicators
-const topicToInsight = new Map<string, { id: string; title: string }>()
-for (const insight of lifecycleInsights) {
-  for (const topic of insight.topics) {
-    topicToInsight.set(topic, { id: insight.id, title: insight.title })
-  }
-}
+// Build insightId → insight lookup
+const insightById = new Map(lifecycleInsights.map(ins => [ins.id, ins]))
 
 export default function DataPage() {
   return (
@@ -203,29 +197,75 @@ export default function DataPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            {/* Interviews */}
+            {/* User Interviews */}
             <div>
               <p className="mb-3 text-sm font-medium">User Interviews</p>
-              <div className="space-y-3">
-                {interviews.map((iv, i) => {
-                  const linkedInsight = topicToInsight.get(iv.topic)
+              <div className="space-y-4">
+                {userInterviews.map(iv => {
+                  const linkedInsight = insightById.get(iv.insightId)
+                  const statusCfg = userInterviewStatusConfig[iv.status]
                   return (
-                    <div key={i} className="rounded-xl border bg-card p-4 ring-1 ring-foreground/10">
-                      <p className="text-sm italic leading-relaxed text-foreground/80">&ldquo;{iv.quote}&rdquo;</p>
-                      <div className="mt-2.5 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">{iv.user}</span>
-                        <span className="text-xs text-muted-foreground">·</span>
-                        <span className="text-xs text-muted-foreground">{iv.date}</span>
-                        <Badge variant="secondary" className={`text-[10px] ${sentimentColor[iv.sentiment]}`}>
-                          {iv.sentiment}
-                        </Badge>
-                        <Badge variant="outline" className="text-[10px]">{iv.topic}</Badge>
+                    <div key={iv.id} className="rounded-xl border bg-card ring-1 ring-foreground/10">
+                      {/* Interview header */}
+                      <div className="border-b px-4 py-3">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium">{linkedInsight?.title ?? iv.insightId}</p>
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                              <Badge variant="secondary" className={`text-[10px] ${statusCfg.color}`}>
+                                {statusCfg.label}
+                              </Badge>
+                              <span className="text-[11px] text-muted-foreground">{iv.responseCount}/{iv.targetCount} responses</span>
+                              <span className="text-[11px] text-muted-foreground">{iv.createdAt}</span>
+                            </div>
+                          </div>
+                          {linkedInsight && (
+                            <Link href="/analysis" className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-medium text-violet-700 transition-colors hover:bg-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:hover:bg-violet-900">
+                              <Sparkles className="size-2.5" />
+                              Insight
+                            </Link>
+                          )}
+                        </div>
+                        <div className="mt-2 space-y-0.5">
+                          {iv.questions.map(q => (
+                            <p key={q.id} className="text-[11px] text-muted-foreground">Q: {q.text}</p>
+                          ))}
+                        </div>
+                        {/* Response progress bar */}
+                        <div className="mt-2.5">
+                          <div className="h-1.5 w-full rounded-full bg-muted">
+                            <div
+                              className="h-1.5 rounded-full bg-violet-500/70 transition-all"
+                              style={{ width: `${Math.round((iv.responseCount / iv.targetCount) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      {linkedInsight && (
-                        <Link href="/analysis" className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-medium text-violet-700 transition-colors hover:bg-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:hover:bg-violet-900">
-                          <Sparkles className="size-2.5" />
-                          <span>→ Insight: {linkedInsight.title}</span>
-                        </Link>
+                      {/* Interview Responses */}
+                      {iv.responses.length > 0 ? (
+                        <div className="divide-y">
+                          {iv.responses.map(resp => (
+                            <div key={resp.id} className="px-4 py-3">
+                              <p className="text-sm italic leading-relaxed text-foreground/80">&ldquo;{resp.quote}&rdquo;</p>
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <span className="text-xs text-muted-foreground">{resp.respondentId}</span>
+                                <span className="text-xs text-muted-foreground">·</span>
+                                <span className="text-xs text-muted-foreground">{resp.date}</span>
+                                <Badge variant="secondary" className={`text-[10px] ${sentimentColor[resp.sentiment]}`}>
+                                  {resp.sentiment}
+                                </Badge>
+                                <Badge variant="outline" className="text-[10px]">{resp.topic}</Badge>
+                                {resp.durationSec && (
+                                  <span className="text-[10px] text-muted-foreground">{Math.floor(resp.durationSec / 60)}m {resp.durationSec % 60}s</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="px-4 py-3">
+                          <p className="text-xs text-muted-foreground">No responses to display yet</p>
+                        </div>
                       )}
                     </div>
                   )
