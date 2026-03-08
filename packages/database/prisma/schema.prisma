@@ -3,14 +3,325 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Core models
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  connections Connection[]
+  products    Product[]
+}
+
+enum UserRole {
+  owner
+  admin
+  member
 }
 
 model User {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  email          String       @unique
+  name           String?
+  role           UserRole     @default(member)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  messages Message[]
+  tasks    Task[]
+}
+
+enum Provider {
+  amplitude
+  mixpanel
+  sentry
+  zendesk
+  slack
+  linear
+  github
+  notion
+  crustdata
+}
+
+model Connection {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  productId      String?
+  product        Product?     @relation(fields: [productId], references: [id])
+  provider       Provider
+  name           String
+  credentials    Json
+  config         Json?
+  syncData       Json?
+  lastSyncAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  insights    Insight[]    @relation("InsightSource")
+  experiments Experiment[]
+}
+
+model Product {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  connections Connection[]
+  threads     Thread[]
+  insights    Insight[]
+  interviews  Interview[]
+  tasks       Task[]
+  experiments Experiment[]
+}
+
+// ---------------------------------------------------------------------------
+// Conversation
+// ---------------------------------------------------------------------------
+
+model Thread {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  title     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  messages Message[]
+  insights Insight[]
+}
+
+enum MessageRole {
+  user
+  assistant
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  threadId  String
+  thread    Thread      @relation(fields: [threadId], references: [id])
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+  role      MessageRole
+  content   String
+  createdAt DateTime    @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Insight lifecycle
+// ---------------------------------------------------------------------------
+
+enum InsightSeverity {
+  critical
+  high
+  medium
+  low
+}
+
+enum InsightStatus {
+  detected
+  investigating
+  resolved
+  dismissed
+}
+
+model Insight {
+  id                 String          @id @default(cuid())
+  productId          String
+  product            Product         @relation(fields: [productId], references: [id])
+  threadId           String?
+  thread             Thread?         @relation(fields: [threadId], references: [id])
+  sourceConnectionId String?
+  sourceConnection   Connection?     @relation("InsightSource", fields: [sourceConnectionId], references: [id])
+  title              String
+  description        String
+  severity           InsightSeverity
+  status             InsightStatus
+  metric             String?
+  topics             Json?
+  summary            String?
+  findings           Json?
+  confidence         Float?
+  detectedAt         DateTime        @default(now())
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  recommendations Recommendation[]
+  interviews      Interview[]
+}
+
+// ---------------------------------------------------------------------------
+// Qualitative
+// ---------------------------------------------------------------------------
+
+enum InterviewStatus {
+  draft
+  sending
+  active
+  completed
+}
+
+model Interview {
+  id          String          @id @default(cuid())
+  productId   String
+  product     Product         @relation(fields: [productId], references: [id])
+  insightId   String?
+  insight     Insight?        @relation(fields: [insightId], references: [id])
+  title       String
+  questions   Json
+  targetCount Int
+  status      InterviewStatus
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  responses InterviewResponse[]
+}
+
+enum Sentiment {
+  positive
+  neutral
+  negative
+}
+
+model InterviewResponse {
+  id            String    @id @default(cuid())
+  interviewId   String
+  interview     Interview @relation(fields: [interviewId], references: [id])
+  respondentId  String?
+  answers       Json
+  sentiment     Sentiment?
+  themes        Json?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Recommendation → PRD → Task
+// ---------------------------------------------------------------------------
+
+enum Priority {
+  critical
+  high
+  medium
+  low
+}
+
+enum Effort {
+  xs
+  s
+  m
+  l
+  xl
+}
+
+enum RecommendationStatus {
+  proposed
+  approved
+  rejected
+}
+
+model Recommendation {
+  id          String               @id @default(cuid())
+  insightId   String
+  insight     Insight              @relation(fields: [insightId], references: [id])
+  title       String
+  description String
+  priority    Priority
+  impact      Float?
+  confidence  Float?
+  effort      Effort?
+  evidence    Json?
+  status      RecommendationStatus
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  prd   PRD?
+  tasks Task[]
+}
+
+enum PRDStatus {
+  draft
+  review
+  approved
+}
+
+model PRD {
+  id               String         @id @default(cuid())
+  recommendationId String         @unique
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id])
+  title            String
+  content          String
+  version          Int            @default(1)
+  status           PRDStatus
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+enum TaskStatus {
+  backlog
+  todo
+  in_progress
+  done
+}
+
+model Task {
+  id               String          @id @default(cuid())
+  productId        String
+  product          Product         @relation(fields: [productId], references: [id])
+  recommendationId String?
+  recommendation   Recommendation? @relation(fields: [recommendationId], references: [id])
+  assigneeId       String?
+  assignee         User?           @relation(fields: [assigneeId], references: [id])
+  title            String
+  description      String?
+  status           TaskStatus
+  externalId       String?
+  externalUrl      String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Experiment
+// ---------------------------------------------------------------------------
+
+enum ExperimentStatus {
+  draft
+  running
+  completed
+  paused
+}
+
+model Experiment {
+  id           String           @id @default(cuid())
+  productId    String
+  product      Product          @relation(fields: [productId], references: [id])
+  connectionId String
+  connection   Connection       @relation(fields: [connectionId], references: [id])
+  externalId   String
+  name         String
+  hypothesis   String?
+  metric       String?
+  significance Float?
+  results      Json?
+  status       ExperimentStatus
+  branch       String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 }

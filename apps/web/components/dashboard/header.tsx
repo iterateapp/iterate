@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { iterationSteps, repoInfo } from "@/lib/mock-data"
+import type { LoopStep, RepoInfo } from "@/lib/types"
 import {
   ChevronDown,
   Database,
@@ -21,7 +21,19 @@ const stepMeta = [
   { icon: BarChart3, color: "text-amber-500" },
 ]
 
-export function Header({ currentPath, chatOpen, onToggleChat }: { currentPath?: string; chatOpen?: boolean; onToggleChat?: () => void }) {
+export function Header({
+  currentPath,
+  chatOpen,
+  onToggleChat,
+  iterationSteps,
+  repoInfo,
+}: {
+  currentPath?: string
+  chatOpen?: boolean
+  onToggleChat?: () => void
+  iterationSteps: LoopStep[]
+  repoInfo: RepoInfo | null
+}) {
   return (
     <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
       {/* Left */}
@@ -43,12 +55,15 @@ export function Header({ currentPath, chatOpen, onToggleChat }: { currentPath?: 
         <div className="h-4 w-px bg-border" />
 
         {/* Repo context */}
-        <div className="hidden items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground md:flex">
-          <GitBranch className="size-3" />
-          <span className="font-mono text-[11px]">{repoInfo.fullName}</span>
-        </div>
-
-        <div className="hidden h-4 w-px bg-border md:block" />
+        {repoInfo && (
+          <>
+            <div className="hidden items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground md:flex">
+              <GitBranch className="size-3" />
+              <span className="font-mono text-[11px]">{repoInfo.fullName}</span>
+            </div>
+            <div className="hidden h-4 w-px bg-border md:block" />
+          </>
+        )}
 
         {/* Step nav */}
         <nav className="hidden items-center gap-0.5 sm:flex">

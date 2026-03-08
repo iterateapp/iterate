@@ -2,18 +2,8 @@ import Link from "next/link"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
-import {
-  keyMetrics,
-  topEvents,
-  funnelData,
-  userInterviews,
-  userInterviewStatusConfig,
-  supportThemes,
-  npsData,
-  dataSources,
-  lifecycleInsights,
-  type Sentiment,
-} from "@/lib/mock-data"
+import { getDataSources, getUserInterviews, getLifecycleInsights, getAnalyticsData } from "@/lib/queries"
+import { userInterviewStatusConfig, type Sentiment } from "@/lib/ui-config"
 import {
   Database,
   TrendingUp,
@@ -35,12 +25,19 @@ const sentimentColor: Record<Sentiment, string> = {
   positive: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
   negative: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   mixed: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+  neutral: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
 }
 
-// Build insightId → insight lookup
-const insightById = new Map(lifecycleInsights.map(ins => [ins.id, ins]))
+export default async function DataPage() {
+  const [dataSources, userInterviews, lifecycleInsights, analytics] = await Promise.all([
+    getDataSources(),
+    getUserInterviews(),
+    getLifecycleInsights(),
+    getAnalyticsData(),
+  ])
 
-export default function DataPage() {
+  const insightById = new Map(lifecycleInsights.map(ins => [ins.id, ins]))
+
   return (
     <div className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/data" />
@@ -71,7 +68,7 @@ export default function DataPage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {dataSources.map(ds => (
               <div
-                key={ds.name}
+                key={ds.id}
                 className={`rounded-xl border bg-card p-4 ring-1 ring-foreground/10 ${ds.status === "disconnected" ? "opacity-50" : ""}`}
               >
                 <div className="flex items-center gap-3">
@@ -88,14 +85,18 @@ export default function DataPage() {
                 </div>
                 {ds.status === "connected" ? (
                   <div className="mt-3 space-y-1 border-t pt-2.5">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-muted-foreground">Events ingested</span>
-                      <span className="font-medium">{ds.eventsIngested}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-muted-foreground">Error rate</span>
-                      <span className="font-medium">{ds.errorRate}</span>
-                    </div>
+                    {ds.eventsIngested !== "—" && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Events ingested</span>
+                        <span className="font-medium">{ds.eventsIngested}</span>
+                      </div>
+                    )}
+                    {ds.errorRate !== "—" && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Error rate</span>
+                        <span className="font-medium">{ds.errorRate}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                       <RefreshCw className="size-2.5" />
                       Synced {ds.lastSync}
@@ -118,9 +119,8 @@ export default function DataPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Quantitative</h2>
           </div>
 
-          {/* Metrics */}
           <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {keyMetrics.map(m => {
+            {analytics.metrics.map(m => {
               const Icon = trendIcon[m.trend]
               return (
                 <div key={m.name} className="rounded-xl border bg-card p-4 ring-1 ring-foreground/10">
@@ -135,16 +135,14 @@ export default function DataPage() {
             })}
           </div>
 
-          {/* Two column: Events + Funnel */}
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Top Events */}
             <div className="rounded-xl border bg-card ring-1 ring-foreground/10">
               <div className="border-b px-4 py-3">
                 <p className="text-sm font-medium">Top Events</p>
                 <p className="text-xs text-muted-foreground">Last 7 days from Amplitude</p>
               </div>
               <div className="divide-y">
-                {topEvents.map(ev => (
+                {analytics.topEvents.map(ev => (
                   <div key={ev.name} className="flex items-center justify-between px-4 py-2.5">
                     <span className="font-mono text-xs">{ev.name}</span>
                     <div className="flex items-center gap-3">
@@ -158,14 +156,13 @@ export default function DataPage() {
               </div>
             </div>
 
-            {/* Funnel */}
             <div className="rounded-xl border bg-card ring-1 ring-foreground/10">
               <div className="border-b px-4 py-3">
                 <p className="text-sm font-medium">Activation Funnel</p>
                 <p className="text-xs text-muted-foreground">User journey conversion</p>
               </div>
               <div className="p-4 space-y-2">
-                {funnelData.map((step, i) => (
+                {analytics.funnelData.map((step, i) => (
                   <div key={step.step}>
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span>{step.step}</span>
@@ -177,7 +174,7 @@ export default function DataPage() {
                         style={{ width: `${step.rate}%` }}
                       />
                     </div>
-                    {i < funnelData.length - 1 && (
+                    {i < analytics.funnelData.length - 1 && (
                       <div className="flex justify-center py-0.5">
                         <ArrowDown className="size-3 text-muted-foreground/40" />
                       </div>
@@ -197,7 +194,6 @@ export default function DataPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            {/* User Interviews */}
             <div>
               <p className="mb-3 text-sm font-medium">User Interviews</p>
               <div className="space-y-4">
@@ -206,7 +202,6 @@ export default function DataPage() {
                   const statusCfg = userInterviewStatusConfig[iv.status]
                   return (
                     <div key={iv.id} className="rounded-xl border bg-card ring-1 ring-foreground/10">
-                      {/* Interview header */}
                       <div className="border-b px-4 py-3">
                         <div className="flex items-center justify-between">
                           <div className="min-w-0 flex-1">
@@ -231,7 +226,6 @@ export default function DataPage() {
                             <p key={q.id} className="text-[11px] text-muted-foreground">Q: {q.text}</p>
                           ))}
                         </div>
-                        {/* Response progress bar */}
                         <div className="mt-2.5">
                           <div className="h-1.5 w-full rounded-full bg-muted">
                             <div
@@ -241,7 +235,6 @@ export default function DataPage() {
                           </div>
                         </div>
                       </div>
-                      {/* Interview Responses */}
                       {iv.responses.length > 0 ? (
                         <div className="divide-y">
                           {iv.responses.map(resp => (
@@ -255,9 +248,6 @@ export default function DataPage() {
                                   {resp.sentiment}
                                 </Badge>
                                 <Badge variant="outline" className="text-[10px]">{resp.topic}</Badge>
-                                {resp.durationSec && (
-                                  <span className="text-[10px] text-muted-foreground">{Math.floor(resp.durationSec / 60)}m {resp.durationSec % 60}s</span>
-                                )}
                               </div>
                             </div>
                           ))}
@@ -273,17 +263,14 @@ export default function DataPage() {
               </div>
             </div>
 
-            {/* Support + NPS */}
             <div className="space-y-6">
-              {/* Support Themes */}
               <div className="rounded-xl border bg-card ring-1 ring-foreground/10">
                 <div className="border-b px-4 py-3">
                   <p className="text-sm font-medium">Support Themes</p>
                 </div>
                 <div className="divide-y">
-                  {supportThemes.map(t => {
+                  {analytics.supportThemes.map(t => {
                     const Icon = trendIcon[t.trend]
-                    // Match support theme to insight topics (approximate match by checking if theme contains a topic keyword)
                     const linkedInsight = lifecycleInsights.find(ins =>
                       ins.topics.some(topic => t.theme.toLowerCase().includes(topic.toLowerCase()))
                     )
@@ -308,24 +295,25 @@ export default function DataPage() {
                 </div>
               </div>
 
-              {/* NPS */}
-              <div className="rounded-xl border bg-card p-4 ring-1 ring-foreground/10">
-                <p className="text-sm font-medium">NPS Score</p>
-                <div className="mt-3 flex items-end gap-2">
-                  <span className="text-4xl font-bold tracking-tight">{npsData.score}</span>
-                  <span className="mb-1 text-sm text-emerald-600 dark:text-emerald-400">+{npsData.score - npsData.previousScore} vs last month</span>
+              {analytics.nps && (
+                <div className="rounded-xl border bg-card p-4 ring-1 ring-foreground/10">
+                  <p className="text-sm font-medium">NPS Score</p>
+                  <div className="mt-3 flex items-end gap-2">
+                    <span className="text-4xl font-bold tracking-tight">{analytics.nps.score}</span>
+                    <span className="mb-1 text-sm text-emerald-600 dark:text-emerald-400">+{analytics.nps.score - analytics.nps.previousScore} vs last month</span>
+                  </div>
+                  <div className="mt-3 flex h-3 w-full overflow-hidden rounded-full">
+                    <div className="bg-emerald-500" style={{ width: `${analytics.nps.promoters}%` }} />
+                    <div className="bg-amber-400" style={{ width: `${analytics.nps.passives}%` }} />
+                    <div className="bg-red-400" style={{ width: `${analytics.nps.detractors}%` }} />
+                  </div>
+                  <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+                    <span>Promoters {analytics.nps.promoters}%</span>
+                    <span>Passives {analytics.nps.passives}%</span>
+                    <span>Detractors {analytics.nps.detractors}%</span>
+                  </div>
                 </div>
-                <div className="mt-3 flex h-3 w-full overflow-hidden rounded-full">
-                  <div className="bg-emerald-500" style={{ width: `${npsData.promoters}%` }} />
-                  <div className="bg-amber-400" style={{ width: `${npsData.passives}%` }} />
-                  <div className="bg-red-400" style={{ width: `${npsData.detractors}%` }} />
-                </div>
-                <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
-                  <span>Promoters {npsData.promoters}%</span>
-                  <span>Passives {npsData.passives}%</span>
-                  <span>Detractors {npsData.detractors}%</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
