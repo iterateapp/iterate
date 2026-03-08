@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
+import { getThreads, getIterationSteps, getGitHubData } from "@/lib/queries";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,17 +19,29 @@ export const metadata: Metadata = {
   description: "Closed-loop AI product management system",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [threads, iterationSteps, githubData] = await Promise.all([
+    getThreads(),
+    getIterationSteps(),
+    getGitHubData(),
+  ]);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppShell>{children}</AppShell>
+        <AppShell
+          initialThreads={threads}
+          iterationSteps={iterationSteps}
+          repoInfo={githubData.repoInfo}
+        >
+          {children}
+        </AppShell>
       </body>
     </html>
   );

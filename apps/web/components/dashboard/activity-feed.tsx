@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { recentActivity } from "@/lib/mock-data"
+import { getRecentActivity } from "@/lib/queries"
 import { cn } from "@/lib/utils"
 import {
   Sparkles,
@@ -29,7 +29,9 @@ const activityColors = {
   data: "text-blue-500",
 }
 
-export function ActivityFeed() {
+export async function ActivityFeed() {
+  const recentActivity = await getRecentActivity()
+
   return (
     <Card>
       <CardHeader>

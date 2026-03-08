@@ -2,19 +2,24 @@ import Image from "next/image"
 import Link from "next/link"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { keyMetrics, dataSources } from "@/lib/mock-data"
+import { getDataSources, getAnalyticsData } from "@/lib/queries"
 import { TrendingUp, TrendingDown, Minus, Check, Plug } from "lucide-react"
 
 const trendIcon = { up: TrendingUp, down: TrendingDown, stable: Minus }
 const trendColor = { up: "text-emerald-600 dark:text-emerald-400", down: "text-red-500", stable: "text-muted-foreground" }
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const [dataSources, analytics] = await Promise.all([
+    getDataSources(),
+    getAnalyticsData(),
+  ])
+
   return (
     <div className="mx-auto max-w-[960px] space-y-8 px-8 py-8">
       <IterationLoop />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {keyMetrics.map(m => {
+        {analytics.metrics.map(m => {
           const Icon = trendIcon[m.trend]
           return (
             <div key={m.name} className="rounded-xl border bg-card p-4 ring-1 ring-foreground/10">
@@ -43,7 +48,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {dataSources.map(ds => (
             <div
-              key={ds.name}
+              key={ds.id}
               className={`flex items-center gap-3 rounded-xl border bg-card p-3 ring-1 ring-foreground/10 ${ds.status === "disconnected" ? "opacity-40" : ""}`}
             >
               <Image src={ds.logoSrc} alt={ds.name} width={28} height={28} className="rounded-md" />

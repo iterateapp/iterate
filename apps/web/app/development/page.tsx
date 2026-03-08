@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
-import { features, pullRequests, repoInfo, experiments, type FeatureStatus, type PrStatus } from "@/lib/mock-data"
+import { getFeatures, getExperiments, getGitHubData, type FeatureStatus, type PrStatus } from "@/lib/queries"
 import Image from "next/image"
 import {
   Code,
@@ -40,22 +40,29 @@ const reviewIcon: Record<string, { icon: typeof Check; color: string }> = {
 
 const effortLabel: Record<string, string> = { S: "Small", M: "Medium", L: "Large", XL: "Extra Large" }
 
-const stats = [
-  { label: "Features", value: String(features.length) },
-  { label: "In Progress", value: String(features.filter(f => f.status === "In Progress").length) },
-  { label: "Open PRs", value: String(pullRequests.filter(p => p.status === "open" || p.status === "draft").length) },
-]
+export default async function DevelopmentPage() {
+  const [features, experiments, githubData] = await Promise.all([
+    getFeatures(),
+    getExperiments(),
+    getGitHubData(),
+  ])
 
-// Map feature names to PR branches
-const featureBranches: Record<string, string[]> = {}
-for (const pr of pullRequests) {
-  if (!featureBranches[pr.featureName]) featureBranches[pr.featureName] = []
-  if (!featureBranches[pr.featureName].includes(pr.branch)) {
-    featureBranches[pr.featureName].push(pr.branch)
+  const { repoInfo, pullRequests } = githubData
+
+  const stats = [
+    { label: "Features", value: String(features.length) },
+    { label: "In Progress", value: String(features.filter(f => f.status === "In Progress").length) },
+    { label: "Open PRs", value: String(pullRequests.filter(p => p.status === "open" || p.status === "draft").length) },
+  ]
+
+  const featureBranches: Record<string, string[]> = {}
+  for (const pr of pullRequests) {
+    if (!featureBranches[pr.featureName]) featureBranches[pr.featureName] = []
+    if (!featureBranches[pr.featureName].includes(pr.branch)) {
+      featureBranches[pr.featureName].push(pr.branch)
+    }
   }
-}
 
-export default function DevelopmentPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/development" />
@@ -71,28 +78,30 @@ export default function DevelopmentPage() {
         </div>
 
         {/* Repo context bar */}
-        <div className="mb-6 flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-2.5">
-          <div className="flex items-center gap-2 text-xs">
-            <GitBranch className="size-3.5 text-muted-foreground" />
-            <span className="font-mono text-[11px] font-medium">{repoInfo.fullName}</span>
+        {repoInfo && (
+          <div className="mb-6 flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-2.5">
+            <div className="flex items-center gap-2 text-xs">
+              <GitBranch className="size-3.5 text-muted-foreground" />
+              <span className="font-mono text-[11px] font-medium">{repoInfo.fullName}</span>
+            </div>
+            <div className="h-3.5 w-px bg-border" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <GitPullRequest className="size-3" />
+              <span>{repoInfo.openPrs} open</span>
+            </div>
+            <div className="h-3.5 w-px bg-border" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <GitBranch className="size-3" />
+              <span>{repoInfo.branches} branches</span>
+            </div>
+            <div className="h-3.5 w-px bg-border" />
+            <span className="text-[11px] text-muted-foreground">Last push {repoInfo.lastPush}</span>
+            <div className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
+              <Image src="/logos/github.svg" alt="GitHub" width={14} height={14} className="dark:invert" />
+              GitHub
+            </div>
           </div>
-          <div className="h-3.5 w-px bg-border" />
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <GitPullRequest className="size-3" />
-            <span>{repoInfo.openPrs} open</span>
-          </div>
-          <div className="h-3.5 w-px bg-border" />
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <GitBranch className="size-3" />
-            <span>{repoInfo.branches} branches</span>
-          </div>
-          <div className="h-3.5 w-px bg-border" />
-          <span className="text-[11px] text-muted-foreground">Last push {repoInfo.lastPush}</span>
-          <div className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
-            <Image src="/logos/github.svg" alt="GitHub" width={14} height={14} className="dark:invert" />
-            GitHub
-          </div>
-        </div>
+        )}
 
         <div className="mb-8 grid grid-cols-3 gap-3">
           {stats.map(s => (
@@ -191,7 +200,6 @@ export default function DevelopmentPage() {
                       <span className="text-xs text-muted-foreground">{pr.filesChanged} files</span>
                     </div>
                   </div>
-                  {/* Branch info */}
                   <div className="mt-2 flex items-center gap-2 pl-9">
                     <div className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5">
                       <GitBranch className="size-2.5 text-muted-foreground" />

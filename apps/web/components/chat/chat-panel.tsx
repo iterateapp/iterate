@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { threads, type Thread, type ThreadMessage } from "@/lib/mock-data"
+import type { ThreadRow, ThreadMessage } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Send, Sparkles, X, Plus, ChevronLeft } from "lucide-react"
 
-export function ChatPanel({ onClose }: { onClose?: () => void }) {
-  const [allThreads, setAllThreads] = useState<Thread[]>(threads)
+export function ChatPanel({ onClose, initialThreads }: { onClose?: () => void; initialThreads: ThreadRow[] }) {
+  const [allThreads, setAllThreads] = useState<ThreadRow[]>(initialThreads)
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
   const [input, setInput] = useState("")
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -19,7 +19,7 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
 
   function handleNewThread() {
     const id = `thread_${Date.now()}`
-    const thread: Thread = {
+    const thread: ThreadRow = {
       id,
       title: "New conversation",
       updatedAt: "Just now",
