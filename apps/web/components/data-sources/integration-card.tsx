@@ -1,19 +1,11 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { Check } from "lucide-react"
+import { Check, ArrowRight } from "lucide-react"
 
 interface IntegrationCardProps {
   name: string
   description: string
-  icon: React.ReactNode
-  available: boolean
+  logoSrc: string
   connected: boolean
   onConnect: () => void
 }
@@ -21,46 +13,50 @@ interface IntegrationCardProps {
 export function IntegrationCard({
   name,
   description,
-  icon,
-  available,
+  logoSrc,
   connected,
   onConnect,
 }: IntegrationCardProps) {
-  return (
-    <Card className="relative">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
-              {icon}
-            </div>
-            <div>
-              <CardTitle>{name}</CardTitle>
-              <CardDescription className="mt-0.5">
-                {description}
-              </CardDescription>
-            </div>
-          </div>
+  if (connected) {
+    return (
+      <div className="flex items-center gap-4 rounded-xl border bg-card px-5 py-4 ring-1 ring-foreground/10">
+        <Image
+          src={logoSrc}
+          alt={name}
+          width={40}
+          height={40}
+          className="rounded-lg"
+        />
+        <div className="flex-1">
+          <p className="text-sm font-medium">{name}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
-      </CardHeader>
-      <CardContent>
-        {connected ? (
-          <div className="flex items-center justify-between">
-            <Badge variant="secondary" className="gap-1">
-              <Check className="size-3" />
-              Connected
-            </Badge>
-          </div>
-        ) : available ? (
-          <Button size="sm" onClick={onConnect}>
-            Connect
-          </Button>
-        ) : (
-          <Button size="sm" variant="outline" disabled>
-            Coming Soon
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+        <Badge variant="secondary" className="gap-1">
+          <Check className="size-3" />
+          Connected
+        </Badge>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onConnect}
+      className="group flex w-full cursor-pointer items-center gap-4 rounded-xl border bg-card px-5 py-4 text-left ring-1 ring-foreground/10 transition-all hover:ring-foreground/25 hover:shadow-sm active:scale-[0.995]"
+    >
+      <Image
+        src={logoSrc}
+        alt={name}
+        width={40}
+        height={40}
+        className="rounded-lg"
+      />
+      <div className="flex-1">
+        <p className="text-sm font-medium">{name}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+      <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+    </button>
   )
 }

@@ -9,7 +9,7 @@ import { CtaSection } from "@/components/dashboard/cta-section"
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header currentPath="/" />
       <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
         <KpiCards />
         <AiInsightPanel />

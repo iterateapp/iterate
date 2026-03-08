@@ -1,12 +1,35 @@
+import Link from "next/link"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Zap } from "lucide-react"
 
-export function Header() {
+const navItems = [
+  { label: "Dashboard", href: "/" },
+  { label: "Data Sources", href: "/data-sources" },
+]
+
+export function Header({ currentPath }: { currentPath?: string }) {
   return (
     <header className="flex items-center justify-between border-b px-6 py-3">
       <div className="flex items-center gap-6">
-        <span className="text-lg font-semibold tracking-tight">Iterate</span>
+        <Link href="/" className="text-lg font-semibold tracking-tight">
+          Iterate
+        </Link>
+        <nav className="hidden items-center gap-1 sm:flex">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                currentPath === item.href
+                  ? "bg-muted font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         <Button variant="outline" size="sm">
           Acme Corp
           <ChevronDown className="ml-1 size-3" />
