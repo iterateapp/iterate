@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# `apps/web`
 
-## Getting Started
+Next.js 16 dashboard for the Iterate platform.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16.1** with App Router + Turbopack
+- **React 19.2** with Server Components
+- **Tailwind CSS v4** + shadcn/ui (Base UI)
+- **TypeScript 5**
+
+## Pages
+
+| Route | Step | Description |
+|-------|------|-------------|
+| `/` | — | Landing / redirect |
+| `/data` | 1. Data | Metrics, events, funnels, interviews, NPS |
+| `/analysis` | 2. Analysis | AI-powered insight explorer with interactive chat |
+| `/development` | 3. Development | Feature tracker, PR status, task breakdown |
+| `/results` | 4. Results | A/B experiments, KPI tracking, feedback loop |
+| `/data-sources` | — | Integration management (Amplitude, Zendesk, etc.) |
+
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# From monorepo root
+make dev-web
+
+# Or directly
+pnpm --filter web dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Runs on [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ai/chat` | POST | AI chat with SSE streaming support |
 
-## Learn More
+## Key Directories
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── api/ai/chat/       # AI chat endpoint
+├── analysis/          # Step 2 — AI insight analysis + chat
+├── data/              # Step 1 — Data dashboard
+├── data-sources/      # Integration settings
+├── development/       # Step 3 — Feature & PR tracker
+├── results/           # Step 4 — Experiment results
+└── layout.tsx         # Root layout with header + sidebar
+components/
+├── dashboard/         # Iteration loop, header, shared dashboard UI
+└── ui/                # shadcn/ui primitives
+lib/
+├── mock-data.ts       # Demo data (ahoda hotel booking scenario)
+└── utils.ts           # Utilities (cn, etc.)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Dependencies
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `@iterate/ai` — AI provider abstraction (workspace package)
+- `@iterate/database` — Prisma database client (workspace package)
