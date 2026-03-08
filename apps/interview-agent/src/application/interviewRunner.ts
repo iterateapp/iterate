@@ -208,12 +208,9 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
   // 7. Collect transcription entries via session events
   const transcript: TranscriptEntry[] = [];
 
-  // 8. Start the agent session
+  // 8. Start the agent session (VAD only — adapters are wired into the Agent, not duplicated here)
   const session = new voice.AgentSession({
-    stt: sttAdapter,
     vad,
-    llm: llmAdapter,
-    tts: ttsAdapter,
   });
 
   // Listen for transcription events before starting
@@ -288,6 +285,12 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
 
   // 12. Save to Supabase
   const db = createDbClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-  await db.saveResults(sessionId, resultToml);
-  console.log(`[InterviewRunner] Results saved for session ${sessionId}`);
+  try {
+    await db.saveResults(sessionId, resultToml);
+    console.log(`[Interview] Results saved for session ${sessionId}`);
+  } catch (err) {
+    console.error(`[Interview] CRITICAL: Failed to save results for session ${sessionId}:`, err);
+    console.error('[Interview] Raw results TOML (for manual recovery):\n', resultToml);
+    throw err; // Re-throw so the agent framework logs it as a failed job
+  }
 }
