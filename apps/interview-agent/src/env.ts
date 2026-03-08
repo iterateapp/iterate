@@ -14,6 +14,5 @@ export const env = {
   FISH_AUDIO_API_KEY: required('FISH_AUDIO_API_KEY'),
   FISH_AUDIO_REFERENCE_ID: process.env.FISH_AUDIO_REFERENCE_ID ?? '',
   FISH_AUDIO_MODEL: process.env.FISH_AUDIO_MODEL ?? 'speech-1.5',
-  SUPABASE_URL: required('SUPABASE_URL'),
-  SUPABASE_SERVICE_ROLE_KEY: required('SUPABASE_SERVICE_ROLE_KEY'),
+  DATABASE_URL: required('DATABASE_URL'),
 };

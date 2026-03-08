@@ -8,6 +8,5 @@ export const env = {
   LIVEKIT_URL: required('LIVEKIT_URL'),
   LIVEKIT_API_KEY: required('LIVEKIT_API_KEY'),
   LIVEKIT_API_SECRET: required('LIVEKIT_API_SECRET'),
-  SUPABASE_URL: required('SUPABASE_URL'),
-  SUPABASE_SERVICE_ROLE_KEY: required('SUPABASE_SERVICE_ROLE_KEY'),
+  DATABASE_URL: required('DATABASE_URL'),
 };

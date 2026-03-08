@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@iterate/database": "workspace:*",
-    "@iterate/shared": "workspace:*",
+    "@iterate/db": "workspace:*",
+    "@iterate/types": "workspace:*",
     "livekit-client": "^2",
     "livekit-server-sdk": "^2",
     "lucide-react": "^0.469.0",

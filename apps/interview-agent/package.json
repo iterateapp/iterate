@@ -14,8 +14,8 @@
   "dependencies": {
     "@google-cloud/speech": "^6.7.0",
     "@hono/node-server": "^1.13.0",
-    "@iterate/database": "workspace:*",
-    "@iterate/shared": "workspace:*",
+    "@iterate/db": "workspace:*",
+    "@iterate/types": "workspace:*",
     "@livekit/agents": "^1.0.44",
     "@livekit/agents-plugin-livekit": "^1.0.48",
     "@livekit/agents-plugin-silero": "^1.0.44",
