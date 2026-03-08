@@ -69,24 +69,29 @@ PMがAIと対話しながら、定量データをもとに仮説を立て、構�
 
 ---
 
-## Phase 3: Action（タスク生成）
+## Phase 3: Action（タスク生成 → 自動実装）
 
 ### 役割
-`results.toml` を元に、実装タスクを生成してLinear/GitHub Issuesに登録する。
+`results.toml` を元に実装タスクをLinearに登録し、Symphonyがそのタスクを拾ってコーディングエージェントに自動実装させる。
 
 ### Input
 - `results.toml`（Phase 2の出力）
 
 ### Process
-- AIがインタビュー結果から改善案を生成
-- RICE（Impact / Confidence / Effort）スコアでタスクを優先順位付け
-- OpenAI Symphony的なエージェントがLinear/GitHub APIを呼び出してタスクを作成
+1. AIがインタビュー結果から改善案を生成
+2. RICE（Impact / Confidence / Effort）スコアでタスクを優先順位付け
+3. Linear APIを呼び出してタスクを作成
+4. **Symphony**（`~/dev/kanban` の改造版）がLinearをポーリングしてタスクを検知
+5. Symphonyがタスクごとに隔離されたワークスペースを作成し、コーディングエージェントを起動
+6. エージェントが実装 → PR作成 → レビュー待ち
 
 ### Output
-- Linear Issues / GitHub Issues / その他PMツールのタスク
+- Linearのタスク（Symphonyが自動でピックアップ）
+- エージェントが生成したPR
 
 ### Human in the loop
-- PMがタスクリストをレビュー・承認してから実際に作成する
+- PMがタスクリストをレビュー・承認してからLinearに作成する
+- PR作成後はエンジニアがレビューして承認する
 
 ---
 
@@ -187,11 +192,17 @@ Amplitude API
 └──────────────┘                     └──────┬───────┘
                                             │ results.toml
                                             ▼
-                                     ┌──────────────┐   Linear / GitHub
-                                     │    Action    │ ──────────────────▶
-                                     │   (Phase 3)  │   Issues / Tasks
-                                     │ Task Gen     │
-                                     └──────────────┘
+                                     ┌──────────────┐
+                                     │    Action    │ ── Linear tasks ──▶ Linear
+                                     │   (Phase 3)  │                        │
+                                     │  Task Gen    │                        │ poll
+                                     └──────────────┘                        ▼
+                                                                      ┌──────────────┐
+                                                                      │   Symphony   │
+                                                                      │  (~/dev/     │ ── PR ──▶ GitHub
+                                                                      │   kanban)    │
+                                                                      │ Coding Agent │
+                                                                      └──────────────┘
 ```
 
 ### オプション: Phase 1 → Phase 3（インタビューをスキップ）
@@ -216,7 +227,7 @@ hypothesis.toml（type = "a_z_test"）
 | AI | Anthropic Claude API（Phase 1: 壁打ち、Phase 3: タスク生成）|
 | AI Interview | OpenAI Realtime API or Claude（Phase 2） |
 | TOML処理 | `@iarna/toml`（Node.js） |
-| 外部連携 | Linear API, GitHub API, Amplitude API |
+| 外部連携 | Linear API, Amplitude API, GitHub API（Symphony経由） |
 | デプロイ | Vercel |
 
 ---
