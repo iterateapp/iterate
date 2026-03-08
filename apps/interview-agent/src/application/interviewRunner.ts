@@ -23,7 +23,6 @@ import { env } from '../env.js';
 
 interface RoomMetadata {
   sessionId: string;
-  configToml: string;
 }
 
 interface TranscriptEntry {
@@ -71,10 +70,10 @@ function parseGoogleCredentials(): { client_email: string; private_key: string }
     if (creds.client_email && creds.private_key) {
       return { client_email: creds.client_email, private_key: creds.private_key };
     }
-  } catch {
-    // ignore parse errors
+    return undefined;
+  } catch (err) {
+    throw new Error(`Failed to parse GOOGLE_CLOUD_CREDENTIALS_JSON: ${err instanceof Error ? err.message : String(err)}`);
   }
-  return undefined;
 }
 
 /**
@@ -153,18 +152,27 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
     throw new Error(`Invalid room metadata JSON: ${rawMetadata}`);
   }
 
-  const { sessionId, configToml } = metadata;
-  if (!sessionId || !configToml) {
-    throw new Error('Room metadata must contain sessionId and configToml');
+  const { sessionId } = metadata;
+  if (!sessionId) {
+    throw new Error('Room metadata must contain sessionId');
   }
 
   console.log(`[InterviewRunner] Starting session ${sessionId}`);
 
-  // 2. Parse TOML config and build system prompt
+  // 2. Fetch configToml from Supabase
+  const db = createDbClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const sessionRecord = await db.getSession(sessionId);
+  if (!sessionRecord) {
+    console.error(`[Interview] Session not found: ${sessionId}`);
+    return;
+  }
+  const configToml = sessionRecord.config_toml;
+
+  // 3. Parse TOML config and build system prompt
   const config: InterviewConfig = parseInterviewConfig(configToml);
   const systemPrompt = buildSystemPrompt(config);
 
-  // 3. Create adapters
+  // 4. Create adapters
   const googleCredentials = parseGoogleCredentials();
   const sttAdapter = new GoogleSttAdapter({
     languageCode: config.interview.language ?? 'ja-JP',
@@ -284,7 +292,6 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
   });
 
   // 12. Save to Supabase
-  const db = createDbClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   try {
     await db.saveResults(sessionId, resultToml);
     console.log(`[Interview] Results saved for session ${sessionId}`);

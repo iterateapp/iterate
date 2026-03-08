@@ -35,7 +35,26 @@ export interface InterviewResults {
 
 // Parsers
 export function parseInterviewConfig(toml: string): InterviewConfig {
-  return parse(toml) as unknown as InterviewConfig;
+  const raw = parse(toml) as Record<string, unknown>;
+
+  const interview = raw['interview'] as Record<string, unknown> | undefined;
+  if (!interview || typeof interview['title'] !== 'string' || typeof interview['language'] !== 'string') {
+    throw new Error('Invalid interview config: missing [interview] section with title and language');
+  }
+
+  const questions = raw['questions'];
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error('Invalid interview config: missing or empty [[questions]] array');
+  }
+
+  for (const q of questions) {
+    const question = q as Record<string, unknown>;
+    if (typeof question['id'] !== 'string' || typeof question['text'] !== 'string') {
+      throw new Error('Invalid interview config: each question must have id and text fields');
+    }
+  }
+
+  return raw as unknown as InterviewConfig;
 }
 
 export function stringifyInterviewResults(results: InterviewResults): string {

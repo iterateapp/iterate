@@ -36,8 +36,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 });
   }
 
-  if (session.status === 'completed' || session.status === 'expired') {
-    return NextResponse.json({ error: 'Session is no longer available' }, { status: 410 });
+  if (session.status !== 'pending') {
+    const messages: Record<string, string> = {
+      completed: 'このインタビューはすでに完了しています。',
+      expired: 'このインタビューの有効期限が切れています。',
+      in_progress: 'このインタビューはすでに進行中です。',
+    };
+    return NextResponse.json({ error: messages[session.status] ?? 'Session unavailable' }, { status: 410 });
   }
 
   if (new Date(session.expires_at) < new Date()) {
@@ -51,7 +56,7 @@ export async function POST(req: NextRequest) {
     const roomService = new RoomServiceClient(livekitUrl, livekitApiKey, livekitApiSecret);
     await roomService.createRoom({
       name: roomName,
-      metadata: JSON.stringify({ sessionId, configToml: session.config_toml }),
+      metadata: JSON.stringify({ sessionId }),
     });
   } catch (err) {
     console.error('LiveKit room creation error:', err);
