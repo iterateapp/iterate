@@ -76,9 +76,9 @@ export function InterviewRoom({ interviewId }: Props) {
               ))}
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-white">AIインタビュアー</h1>
+          <h1 className="text-2xl font-semibold text-white">AI Interviewer</h1>
           <p className="text-zinc-400 text-sm max-w-sm">
-            AIがいくつかの質問をお聞きします。マイクとカメラの使用を許可してください。
+            The AI will ask you a few questions. Please allow microphone and camera access.
           </p>
         </div>
         <button
@@ -87,7 +87,7 @@ export function InterviewRoom({ interviewId }: Props) {
           className="flex items-center gap-2.5 rounded-full bg-white px-8 py-4 text-zinc-900 font-semibold text-base hover:bg-zinc-100 transition-colors"
         >
           <Play className="h-5 w-5" />
-          インタビューを開始
+          Start Interview
         </button>
       </div>
     );
@@ -103,8 +103,8 @@ export function InterviewRoom({ interviewId }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white">インタビュー完了</h2>
-          <p className="text-zinc-400 text-sm">ご参加ありがとうございました。<br />回答は保存されました。</p>
+          <h2 className="text-xl font-semibold text-white">Interview Complete</h2>
+          <p className="text-zinc-400 text-sm">Thank you for your participation.<br />Your responses have been saved.</p>
         </div>
       </div>
     );
@@ -115,10 +115,10 @@ export function InterviewRoom({ interviewId }: Props) {
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-6 px-4">
         <audio ref={audioRef} autoPlay />
         <div className="text-center space-y-3">
-          <p className="text-red-400 text-sm">{error || '接続に失敗しました'}</p>
+          <p className="text-red-400 text-sm">{error || 'Connection failed'}</p>
           <button type="button" onClick={startCall}
             className="rounded-full border border-zinc-700 px-6 py-2 text-sm text-white hover:bg-zinc-800 transition-colors">
-            再試行
+            Retry
           </button>
         </div>
       </div>
@@ -137,18 +137,18 @@ export function InterviewRoom({ interviewId }: Props) {
           {callState === 'connected' && (
             <span className="flex items-center gap-1.5 text-xs text-zinc-500">
               <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-              録音中 {formatTime(elapsed)}
+              Recording {formatTime(elapsed)}
             </span>
           )}
           {callState === 'connecting' && (
-            <span className="text-xs text-zinc-500">接続中...</span>
+            <span className="text-xs text-zinc-500">Connecting...</span>
           )}
         </div>
       </div>
 
-      {/* Main video area */}
-      <div className="flex flex-1 gap-4 px-6 pb-4 min-h-0">
-        {/* AI panel */}
+      {/* Main area — AI panel full width, camera PiP bottom-right */}
+      <div className="flex flex-1 px-6 pb-4 min-h-0 relative">
+        {/* AI panel (full width) */}
         <div className="flex-1 rounded-2xl bg-zinc-900 flex flex-col items-center justify-center relative overflow-hidden">
           {/* Pulsing orb when AI is speaking */}
           <div className={`relative flex items-center justify-center transition-all duration-300 ${isAgentSpeaking ? 'scale-110' : 'scale-100'}`}>
@@ -169,7 +169,7 @@ export function InterviewRoom({ interviewId }: Props) {
               </svg>
             </div>
           </div>
-          <p className="mt-4 text-zinc-500 text-sm">AIインタビュアー</p>
+          <p className="mt-4 text-zinc-500 text-sm">AI Interviewer</p>
           {/* Agent's latest text */}
           {lastAgentText && (
             <p className="absolute bottom-4 left-4 right-4 text-center text-white text-sm leading-relaxed bg-zinc-950/50 rounded-lg px-3 py-2">
@@ -178,34 +178,22 @@ export function InterviewRoom({ interviewId }: Props) {
           )}
         </div>
 
-        {/* User camera panel */}
-        <div className="flex-1 rounded-2xl bg-zinc-900 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* PiP camera — small overlay bottom-right */}
+        <div className="absolute bottom-6 right-8 w-48 h-36 rounded-xl bg-zinc-800 overflow-hidden shadow-2xl ring-1 ring-white/10 z-10">
           {cameraEnabled ? (
             <video
               ref={videoRef}
               autoPlay
               muted
               playsInline
-              className="h-full w-full object-cover rounded-2xl scale-x-[-1]"
+              className="h-full w-full object-cover scale-x-[-1]"
             />
           ) : (
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-20 w-20 rounded-full bg-zinc-800 flex items-center justify-center">
-                {cameraError ? <VideoOff className="h-8 w-8 text-zinc-600" /> : <Video className="h-8 w-8 text-zinc-600" />}
-              </div>
-              <p className="text-zinc-600 text-sm">{cameraError ? 'カメラにアクセスできません' : 'カメラ準備中...'}</p>
+            <div className="h-full w-full flex flex-col items-center justify-center gap-1">
+              {cameraError ? <VideoOff className="h-5 w-5 text-zinc-600" /> : <Video className="h-5 w-5 text-zinc-600" />}
+              <p className="text-zinc-600 text-[10px]">{cameraError ? 'No camera' : 'Starting...'}</p>
             </div>
           )}
-          {/* User's latest text */}
-          {lastUserText && (
-            <p className="absolute bottom-4 left-4 right-4 text-center text-white text-sm leading-relaxed bg-zinc-950/50 rounded-lg px-3 py-2">
-              {lastUserText}
-            </p>
-          )}
-          {/* User label */}
-          <div className="absolute top-3 left-3 text-xs text-zinc-500 bg-zinc-950/50 rounded px-2 py-0.5">
-            あなた
-          </div>
         </div>
       </div>
 
@@ -234,7 +222,7 @@ export function InterviewRoom({ interviewId }: Props) {
         {callState === 'connecting' && (
           <div className="flex items-center gap-2 text-zinc-500 text-sm">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            接続中...
+            Connecting...
           </div>
         )}
       </div>

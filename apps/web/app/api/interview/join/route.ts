@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
 
   if (interview.status !== 'PENDING') {
     const messages: Record<string, string> = {
-      COMPLETED: 'このインタビューはすでに完了しています。',
-      EXPIRED: 'このインタビューの有効期限が切れています。',
-      IN_PROGRESS: 'このインタビューはすでに進行中です。',
+      COMPLETED: 'This interview has already been completed.',
+      EXPIRED: 'This interview link has expired.',
+      IN_PROGRESS: 'This interview is already in progress.',
     };
     return NextResponse.json(
       { error: messages[interview.status] ?? 'Interview unavailable' },
@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
 
   const metadata: AgentJobMetadata = {
     interviewId,
-    language: 'ja',
-    interviewerName: 'AIインタビュアー',
+    language: 'en',
+    interviewerName: 'AI Interviewer',
     questions: interview.questions as { id: string; text: string }[],
   };
 

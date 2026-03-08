@@ -27,7 +27,7 @@ export default async function InterviewPage({ params }: Props) {
   if (interview.status === 'EXPIRED') {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-400">このインタビューの有効期限が切れています。</p>
+        <p className="text-zinc-400">This interview link has expired.</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default async function InterviewPage({ params }: Props) {
   if (interview.status === 'COMPLETED') {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-400">このインタビューはすでに完了しています。ありがとうございました。</p>
+        <p className="text-zinc-400">This interview has already been completed. Thank you.</p>
       </div>
     );
   }

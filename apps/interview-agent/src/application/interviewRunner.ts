@@ -66,23 +66,30 @@ function buildSystemPrompt(
   phase: 'greeting' | 'question' | 'follow_up' | 'closing',
 ): string {
   if (phase === 'greeting') {
-    return `あなたはプロのユーザーリサーチインタビュアーです。
-今からインタビューを始めます。まず自己紹介と今日のインタビューの目的を簡潔に説明してください。
-インタビューは ${meta.questions.length} 個の質問で構成されています。
-言語: ${meta.language === 'ja' ? '日本語' : meta.language}
-インタビュアー名: ${meta.interviewerName}
-最初の挨拶のみを行い、質問はまだしないでください。`;
+    return `You are a professional user research interviewer.
+Start the interview with a brief self-introduction and explanation of today's interview purpose.
+The interview consists of ${meta.questions.length} questions.
+Language: English
+Interviewer name: ${meta.interviewerName}
+Only give the initial greeting, do not ask any questions yet.`;
   }
 
   if (phase === 'closing') {
-    return `インタビューが終了しました。参加者に感謝の言葉を伝え、インタビューを締めくくってください。簡潔にお願いします。`;
+    return `The interview is complete. Thank the participant warmly and close the interview.`;
   }
 
-  const phaseLabel = phase === 'follow_up' ? '深掘り' : '';
-  return `あなたはプロのユーザーリサーチインタビュアーです。
-現在の${phaseLabel}質問: 「${currentQuestion?.text}」
-ユーザーの回答に対して自然な相槌を打ち、必要であれば回答を引き出す一言を添えてください。
-新しい質問は絶対にしないでください。相槌は短く（1〜2文）にしてください。`;
+  if (phase === 'follow_up') {
+    return `You are a professional user research interviewer.
+Original question: "${currentQuestion?.text}"
+Language: English
+Ask only ONE concise follow-up question to dig deeper into the user's response. Then listen.`;
+  }
+
+  return `You are a professional user research interviewer conducting an interview.
+Current question: "${currentQuestion?.text}"
+Language: English
+Interviewer name: ${meta.interviewerName}
+Your role is to listen actively to the user's response. Do NOT ask follow-up questions on your own.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,7 +112,7 @@ async function decideFollowUp(
     messages: [
       {
         role: 'user',
-        content: `ユーザーリサーチのインタビューで、以下の回答がありました。\n\n質問: ${question.text}\n回答: ${userResponse}\n\nこの回答は十分に詳しいですか？もっと掘り下げる必要がある場合は、具体的な深掘り質問を1つ生成してください。十分な場合は "SUFFICIENT" とだけ答えてください。`,
+        content: `In a user research interview, the following response was given.\n\nQuestion: ${question.text}\nAnswer: ${userResponse}\n\nIs this answer sufficiently detailed? If more probing is needed, generate one specific follow-up question. If it is sufficient, reply with only "SUFFICIENT".`,
       },
     ],
     max_tokens: 150,
@@ -121,14 +128,14 @@ async function decideFollowUp(
  */
 async function summarizeAnswer(openai: OpenAI, qt: QuestionTranscript): Promise<string> {
   const userText = qt.userUtterances.join(' ');
-  if (!userText.trim()) return '回答なし';
+  if (!userText.trim()) return 'No answer provided';
 
   const res = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
         role: 'user',
-        content: `以下のユーザーインタビュー回答を、150文字以内で簡潔に要約してください。\n\n質問: ${qt.question.text}\n回答: ${userText}\n\n要約:`,
+        content: `Summarize the following user interview response concisely in 150 words or fewer.\n\nQuestion: ${qt.question.text}\nAnswer: ${userText}\n\nSummary:`,
       },
     ],
     max_tokens: 200,
@@ -190,7 +197,7 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
   const participant = await jobCtx.waitForParticipant();
 
   const sttConfig: GoogleSttConfig = {
-    languageCode: meta.language === 'ja' ? 'ja-JP' : meta.language,
+    languageCode: meta.language === 'en' ? 'en-US' : meta.language,
     sampleRate: 16000,
     credentials: googleCredentials,
   };
@@ -346,7 +353,7 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
   console.log('[Interview] Phase: CLOSING');
   session.updateAgent(createAgent('closing', -1));
   await agentSay(
-    '以上で全ての質問が終わりました。本日はお時間をいただき、ありがとうございました。',
+    'That concludes all of our questions. Thank you so much for your time today.',
   );
   await waitMs(3000);
 
@@ -377,7 +384,7 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
     messages: [
       {
         role: 'user',
-        content: `以下のインタビュー回答全体のセンチメントを "positive" / "neutral" / "negative" の1単語で答えてください。\n${allText}`,
+        content: `Classify the overall sentiment of the following interview responses as exactly one word: "positive", "neutral", or "negative".\n${allText}`,
       },
     ],
     max_tokens: 10,
