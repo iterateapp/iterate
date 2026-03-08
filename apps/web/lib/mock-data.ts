@@ -39,6 +39,7 @@ export const dataSources: DataSource[] = [
   { name: "Mixpanel", logoSrc: "/logos/mixpanel.svg", status: "disconnected", description: "Product analytics", lastSync: "—", eventsIngested: "—", errorRate: "—" },
   { name: "Sentry", logoSrc: "/logos/sentry.svg", status: "connected", description: "Error monitoring", lastSync: "5 min ago", eventsIngested: "3,291", errorRate: "0.01%" },
   { name: "Slack", logoSrc: "/logos/slack.svg", status: "connected", description: "User feedback", lastSync: "8 min ago", eventsIngested: "1,847", errorRate: "0%" },
+  { name: "Crustdata", logoSrc: "/logos/crustdata.svg", status: "connected", description: "B2B data intelligence", lastSync: "12 min ago", eventsIngested: "8,214", errorRate: "0.03%" },
 ]
 
 // ---------------------------------------------------------------------------

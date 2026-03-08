@@ -34,6 +34,11 @@ const integrations = [
     description: "Communication — user feedback, team threads",
     logoSrc: "/logos/slack.svg",
   },
+  {
+    name: "Crustdata",
+    description: "B2B data intelligence — company signals, growth metrics",
+    logoSrc: "/logos/crustdata.svg",
+  },
 ] as const
 
 export default function DataSourcesPage() {

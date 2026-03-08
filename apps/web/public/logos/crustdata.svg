@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="8" fill="#111133"/>
+  <!-- Hexagon outline -->
+  <path d="M24 8L37.5 16v16L24 40L10.5 32V16Z" stroke="#5752ca" stroke-width="2.8" fill="none" stroke-linejoin="round"/>
+  <!-- Inner geometric pattern - diamond/triangle lines -->
+  <path d="M10.5 16L24 24l13.5-8" stroke="#5752ca" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M24 24v16" stroke="#5752ca" stroke-width="2.2"/>
+  <path d="M10.5 32L24 24l13.5 8" stroke="#5752ca" stroke-width="2.2" stroke-linejoin="round" opacity="0.5"/>
+  <path d="M24 8L10.5 32" stroke="#5752ca" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M24 8L37.5 32" stroke="#5752ca" stroke-width="2.2" stroke-linejoin="round"/>
+</svg>
