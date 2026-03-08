@@ -1,7 +1,9 @@
+import Image from "next/image"
+import Link from "next/link"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { keyMetrics } from "@/lib/mock-data"
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { keyMetrics, dataSources } from "@/lib/mock-data"
+import { TrendingUp, TrendingDown, Minus, Check, Plug } from "lucide-react"
 
 const trendIcon = { up: TrendingUp, down: TrendingDown, stable: Minus }
 const trendColor = { up: "text-emerald-600 dark:text-emerald-400", down: "text-red-500", stable: "text-muted-foreground" }
@@ -25,6 +27,38 @@ export default function DashboardPage() {
             </div>
           )
         })}
+      </div>
+
+      {/* Connected Sources */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Plug className="size-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">Connected Sources</h2>
+          </div>
+          <Link href="/data-sources" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            Manage
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {dataSources.map(ds => (
+            <div
+              key={ds.name}
+              className={`flex items-center gap-3 rounded-xl border bg-card p-3 ring-1 ring-foreground/10 ${ds.status === "disconnected" ? "opacity-40" : ""}`}
+            >
+              <Image src={ds.logoSrc} alt={ds.name} width={28} height={28} className="rounded-md" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium">{ds.name}</p>
+                  {ds.status === "connected" && <Check className="size-3 text-emerald-500" />}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {ds.status === "connected" ? `Synced ${ds.lastSync}` : "Not connected"}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <ActivityFeed />

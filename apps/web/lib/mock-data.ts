@@ -37,8 +37,8 @@ export interface DataSource {
 export const dataSources: DataSource[] = [
   { name: "Amplitude", logoSrc: "/logos/amplitude.svg", status: "connected", description: "Product analytics", lastSync: "2 min ago", eventsIngested: "12,438", errorRate: "0.02%" },
   { name: "Mixpanel", logoSrc: "/logos/mixpanel.svg", status: "disconnected", description: "Product analytics", lastSync: "—", eventsIngested: "—", errorRate: "—" },
-  { name: "Sentry", logoSrc: "/logos/sentry.svg", status: "disconnected", description: "Error monitoring", lastSync: "—", eventsIngested: "—", errorRate: "—" },
-  { name: "Slack", logoSrc: "/logos/slack.svg", status: "disconnected", description: "User feedback", lastSync: "—", eventsIngested: "—", errorRate: "—" },
+  { name: "Sentry", logoSrc: "/logos/sentry.svg", status: "connected", description: "Error monitoring", lastSync: "5 min ago", eventsIngested: "3,291", errorRate: "0.01%" },
+  { name: "Slack", logoSrc: "/logos/slack.svg", status: "connected", description: "User feedback", lastSync: "8 min ago", eventsIngested: "1,847", errorRate: "0%" },
 ]
 
 // ---------------------------------------------------------------------------
