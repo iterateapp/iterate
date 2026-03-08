@@ -161,7 +161,6 @@ function buildFullTranscript(qt: QuestionTranscript): string {
  * through questions autonomously.
  */
 export async function runInterview(jobCtx: JobContext): Promise<void> {
-  const meta = parseJobMetadata(jobCtx);
   const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
   // --- Build adapters ---
@@ -176,6 +175,19 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
       `Failed to parse GOOGLE_CLOUD_CREDENTIALS_JSON: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
+
+  const vad = await VAD.load();
+  const startTime = Date.now();
+
+  // State machine bookkeeping
+  let currentQuestionIndex = -1; // -1 = greeting/closing phase
+  let waitingForUser = false;
+
+  // --- Connect and wait for participant ---
+  // NOTE: room.metadata is only populated AFTER connect(), so parseJobMetadata must come after.
+  await jobCtx.connect();
+  const meta = parseJobMetadata(jobCtx);
+  const participant = await jobCtx.waitForParticipant();
 
   const sttConfig: GoogleSttConfig = {
     languageCode: meta.language === 'ja' ? 'ja-JP' : meta.language,
@@ -201,9 +213,6 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
   };
   const llm = new OpenAiLlmAdapter(llmConfig);
 
-  const vad = await VAD.load();
-  const startTime = Date.now();
-
   // --- Per-question transcript storage ---
   const questionTranscripts: QuestionTranscript[] = meta.questions.map((q) => ({
     question: q,
@@ -211,14 +220,6 @@ export async function runInterview(jobCtx: JobContext): Promise<void> {
     userUtterances: [],
     followUpCount: 0,
   }));
-
-  // State machine bookkeeping
-  let currentQuestionIndex = -1; // -1 = greeting/closing phase
-  let waitingForUser = false;
-
-  // --- Connect and wait for participant ---
-  await jobCtx.connect();
-  const participant = await jobCtx.waitForParticipant();
   console.log(`[Interview] Participant joined: ${participant.identity}`);
 
   // --- Create initial agent (greeting phase) ---
