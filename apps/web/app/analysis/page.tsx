@@ -9,6 +9,7 @@ import {
   lifecycleInsights,
   insightStatusConfig,
   insightStatusOrder,
+  features,
   type InsightStatus,
   type InsightMessage,
 } from "@/lib/mock-data"
@@ -16,13 +17,13 @@ import {
   Sparkles,
   Send,
   User,
-  ArrowRight,
   Check,
   FileText,
   ListChecks,
   MessageSquare,
   Shield,
   Clock,
+  Code,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -172,6 +173,8 @@ export default function AnalysisPage() {
               {lifecycleInsights.map(insight => {
                 const isSelected = insight.id === selectedId
                 const config = insightStatusConfig[insight.status]
+                const linkedFeature = features.find(f => f.insightId === insight.id)
+                const showFeatureLink = linkedFeature && (insight.status === "approved" || insight.status === "in_development")
                 return (
                   <button
                     key={insight.id}
@@ -195,6 +198,12 @@ export default function AnalysisPage() {
                         <div className="mt-2">
                           <LifecycleProgress status={insight.status} />
                         </div>
+                        {showFeatureLink && (
+                          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                            <Code className="size-2" />
+                            → Feature: {linkedFeature.name}
+                          </div>
+                        )}
                       </div>
                       {insight.confidence && (
                         <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
@@ -335,6 +344,7 @@ export default function AnalysisPage() {
             </div>
           </div>
         </div>
+
       </main>
     </div>
   )

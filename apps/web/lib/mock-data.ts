@@ -168,6 +168,7 @@ export interface LifecycleInsight {
   metric: string
   source: string
   detectedAt: string
+  topics: string[] // links to Interview.topic and SupportTheme.theme
   confidence?: number
   interviewsSent?: number
   interviewsResponded?: number
@@ -184,6 +185,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Cart Abandonment",
     source: "Amplitude",
     detectedAt: "5d ago",
+    topics: [],
     confidence: 92,
     interviewsSent: 20,
     interviewsResponded: 14,
@@ -206,6 +208,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Discovery Engagement",
     source: "Amplitude",
     detectedAt: "3d ago",
+    topics: ["Discovery"],
     confidence: 86,
     interviewsSent: 15,
     interviewsResponded: 12,
@@ -224,6 +227,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Notification Opt-in",
     source: "Amplitude",
     detectedAt: "2d ago",
+    topics: ["Notifications"],
     confidence: 79,
     interviewsSent: 10,
     interviewsResponded: 7,
@@ -242,6 +246,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "Onboarding Completion",
     source: "Amplitude",
     detectedAt: "1d ago",
+    topics: ["Onboarding"],
     confidence: 64,
     interviewsSent: 12,
     interviewsResponded: 4,
@@ -259,6 +264,7 @@ export const lifecycleInsights: LifecycleInsight[] = [
     metric: "API Response Time",
     source: "Amplitude",
     detectedAt: "2h ago",
+    topics: [],
     confidence: 42,
     messages: [
       { id: "m_005_1", role: "ai", content: "**Anomaly detected:** API P95 latency increased from 120ms to 890ms during peak hours (2-6pm UTC). Feed endpoint accounts for 68% of peak load. 12% of requests timing out.\n\nStarting automated investigation — analyzing endpoint patterns, database queries, and cache hit rates.", timestamp: "2h ago" },
@@ -283,10 +289,10 @@ export interface Feature {
 }
 
 export const features: Feature[] = [
-  { id: "feat_001", name: "Creator Discovery Feed", description: "Personalized feed that surfaces relevant creators based on user interests, interaction history, and trending content.", insightId: "ins_001", impactScore: 9.1, confidence: 86, effort: "L", status: "Proposed" },
-  { id: "feat_002", name: "Smart Notification Batching", description: "Intelligent grouping of notifications by priority and context, delivered at optimal times based on user behavior.", insightId: "ins_002", impactScore: 8.4, confidence: 79, effort: "M", status: "In Progress" },
-  { id: "feat_003", name: "Onboarding Personalization", description: "Dynamic onboarding flow that adapts based on user type, interests, and engagement patterns.", insightId: "ins_003", impactScore: 8.1, confidence: 91, effort: "M", status: "Released" },
-  { id: "feat_004", name: "Semantic Search Upgrade", description: "AI-powered search that understands intent and context for long-tail queries.", insightId: "ins_004", impactScore: 7.9, confidence: 74, effort: "L", status: "Approved" },
+  { id: "feat_001", name: "Creator Discovery Feed", description: "Personalized feed that surfaces relevant creators based on user interests, interaction history, and trending content.", insightId: "ins_002", impactScore: 9.1, confidence: 86, effort: "L", status: "Proposed" },
+  { id: "feat_002", name: "Smart Notification Batching", description: "Intelligent grouping of notifications by priority and context, delivered at optimal times based on user behavior.", insightId: "ins_003", impactScore: 8.4, confidence: 79, effort: "M", status: "In Progress" },
+  { id: "feat_003", name: "Onboarding Personalization", description: "Dynamic onboarding flow that adapts based on user type, interests, and engagement patterns.", insightId: "ins_004", impactScore: 8.1, confidence: 91, effort: "M", status: "Released" },
+  { id: "feat_004", name: "Semantic Search Upgrade", description: "AI-powered search that understands intent and context for long-tail queries.", insightId: "ins_001", impactScore: 7.9, confidence: 74, effort: "L", status: "Approved" },
   { id: "feat_005", name: "One-tap Share Sheet", description: "Streamlined sharing flow with platform-specific previews and one-tap actions.", insightId: "ins_005", impactScore: 7.5, confidence: 68, effort: "S", status: "Proposed" },
 ]
 
@@ -299,6 +305,8 @@ export interface PullRequest {
   id: string
   number: number
   title: string
+  branch: string
+  baseBranch: string
   featureName: string
   status: PrStatus
   additions: number
@@ -306,15 +314,31 @@ export interface PullRequest {
   filesChanged: number
   createdAt: string
   reviewStatus: "approved" | "changes_requested" | "pending" | "none"
+  author: string
+  authorAvatar: string
 }
 
 export const pullRequests: PullRequest[] = [
-  { id: "pr_001", number: 149, title: "feat: implement interest-based onboarding flow", featureName: "Onboarding Personalization", status: "merged", additions: 487, deletions: 123, filesChanged: 14, createdAt: "3d ago", reviewStatus: "approved" },
-  { id: "pr_002", number: 147, title: "feat: add batch queue service for notifications", featureName: "Smart Notification Batching", status: "merged", additions: 312, deletions: 28, filesChanged: 9, createdAt: "2d ago", reviewStatus: "approved" },
-  { id: "pr_003", number: 145, title: "feat: notification preferences UI", featureName: "Smart Notification Batching", status: "open", additions: 234, deletions: 45, filesChanged: 8, createdAt: "1d ago", reviewStatus: "pending" },
-  { id: "pr_004", number: 142, title: "feat: notification grouping algorithm", featureName: "Smart Notification Batching", status: "merged", additions: 189, deletions: 12, filesChanged: 5, createdAt: "4d ago", reviewStatus: "approved" },
-  { id: "pr_005", number: 151, title: "feat: optimal notification timing engine", featureName: "Smart Notification Batching", status: "draft", additions: 156, deletions: 8, filesChanged: 4, createdAt: "6h ago", reviewStatus: "none" },
+  { id: "pr_001", number: 149, title: "feat: implement interest-based onboarding flow", branch: "feat/onboarding-personalization", baseBranch: "main", featureName: "Onboarding Personalization", status: "merged", additions: 487, deletions: 123, filesChanged: 14, createdAt: "3d ago", reviewStatus: "approved", author: "iterate-ai", authorAvatar: "IA" },
+  { id: "pr_002", number: 147, title: "feat: add batch queue service for notifications", branch: "feat/notification-batch-queue", baseBranch: "main", featureName: "Smart Notification Batching", status: "merged", additions: 312, deletions: 28, filesChanged: 9, createdAt: "2d ago", reviewStatus: "approved", author: "iterate-ai", authorAvatar: "IA" },
+  { id: "pr_003", number: 145, title: "feat: notification preferences UI", branch: "feat/notification-preferences-ui", baseBranch: "main", featureName: "Smart Notification Batching", status: "open", additions: 234, deletions: 45, filesChanged: 8, createdAt: "1d ago", reviewStatus: "pending", author: "iterate-ai", authorAvatar: "IA" },
+  { id: "pr_004", number: 142, title: "feat: notification grouping algorithm", branch: "feat/notification-grouping", baseBranch: "main", featureName: "Smart Notification Batching", status: "merged", additions: 189, deletions: 12, filesChanged: 5, createdAt: "4d ago", reviewStatus: "approved", author: "iterate-ai", authorAvatar: "IA" },
+  { id: "pr_005", number: 151, title: "feat: optimal notification timing engine", branch: "feat/notification-timing-engine", baseBranch: "main", featureName: "Smart Notification Batching", status: "draft", additions: 156, deletions: 8, filesChanged: 4, createdAt: "6h ago", reviewStatus: "none", author: "iterate-ai", authorAvatar: "IA" },
 ]
+
+// ---------------------------------------------------------------------------
+// Git Repository Context
+// ---------------------------------------------------------------------------
+export const repoInfo = {
+  owner: "acme-corp",
+  name: "creator-platform",
+  fullName: "acme-corp/creator-platform",
+  defaultBranch: "main",
+  url: "https://github.com/acme-corp/creator-platform",
+  openPrs: 2,
+  branches: 8,
+  lastPush: "6h ago",
+}
 
 // ---------------------------------------------------------------------------
 // Step 4 — Results: Experiments
@@ -332,6 +356,7 @@ export interface Experiment {
   id: string
   name: string
   featureName: string
+  branch: string
   status: ExperimentStatus
   metric: string
   startedAt: string
@@ -341,23 +366,23 @@ export interface Experiment {
 
 export const experiments: Experiment[] = [
   {
-    id: "exp_001", name: "Personalized Onboarding v2", featureName: "Onboarding Personalization", status: "completed", metric: "Onboarding Completion", startedAt: "14d ago", significance: 98,
+    id: "exp_001", name: "Personalized Onboarding v2", featureName: "Onboarding Personalization", branch: "feat/onboarding-personalization", status: "completed", metric: "Onboarding Completion", startedAt: "14d ago", significance: 98,
     variants: [{ name: "Control", users: 4820, metric: 34, change: 0 }, { name: "Personalized", users: 4795, metric: 51, change: 50 }],
   },
   {
-    id: "exp_002", name: "Notification Batching", featureName: "Smart Notification Batching", status: "running", metric: "Notification Opt-in Rate", startedAt: "3d ago", significance: 72,
+    id: "exp_002", name: "Notification Batching", featureName: "Smart Notification Batching", branch: "feat/notification-batch-queue", status: "running", metric: "Notification Opt-in Rate", startedAt: "3d ago", significance: 72,
     variants: [{ name: "Control", users: 2100, metric: 58, change: 0 }, { name: "Batched", users: 2150, metric: 71, change: 22.4 }],
   },
   {
-    id: "exp_003", name: "Search Relevance v3", featureName: "Semantic Search Upgrade", status: "completed", metric: "Search Success Rate", startedAt: "21d ago", significance: 95,
+    id: "exp_003", name: "Search Relevance v3", featureName: "Semantic Search Upgrade", branch: "feat/semantic-search-v3", status: "completed", metric: "Search Success Rate", startedAt: "21d ago", significance: 95,
     variants: [{ name: "Control", users: 6200, metric: 33, change: 0 }, { name: "Semantic", users: 6180, metric: 47, change: 42.4 }],
   },
   {
-    id: "exp_004", name: "Creator Recommendations", featureName: "Creator Discovery Feed", status: "running", metric: "Creator Follow Rate", startedAt: "5d ago", significance: 61,
+    id: "exp_004", name: "Creator Recommendations", featureName: "Creator Discovery Feed", branch: "feat/creator-discovery-feed", status: "running", metric: "Creator Follow Rate", startedAt: "5d ago", significance: 61,
     variants: [{ name: "Control", users: 1800, metric: 8.2, change: 0 }, { name: "AI Recommended", users: 1820, metric: 11.4, change: 39 }],
   },
   {
-    id: "exp_005", name: "Simplified Sharing", featureName: "One-tap Share Sheet", status: "paused", metric: "Share Completion Rate", startedAt: "10d ago", significance: 45,
+    id: "exp_005", name: "Simplified Sharing", featureName: "One-tap Share Sheet", branch: "feat/one-tap-share", status: "paused", metric: "Share Completion Rate", startedAt: "10d ago", significance: 45,
     variants: [{ name: "Control", users: 950, metric: 3.1, change: 0 }, { name: "One-tap", users: 980, metric: 4.8, change: 54.8 }],
   },
 ]

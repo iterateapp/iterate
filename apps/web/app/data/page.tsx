@@ -14,6 +14,9 @@ import {
   type Sentiment,
 } from "@/lib/mock-data"
 import {
+  lifecycleInsights,
+} from "@/lib/mock-data"
+import {
   Database,
   TrendingUp,
   TrendingDown,
@@ -25,6 +28,7 @@ import {
   Check,
   Plug,
   RefreshCw,
+  Sparkles,
 } from "lucide-react"
 
 const trendIcon = { up: TrendingUp, down: TrendingDown, stable: Minus }
@@ -35,6 +39,14 @@ const sentimentColor: Record<Sentiment, string> = {
   mixed: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
 }
 
+// Build topic → insight lookup for per-item flow indicators
+const topicToInsight = new Map<string, { id: string; title: string }>()
+for (const insight of lifecycleInsights) {
+  for (const topic of insight.topics) {
+    topicToInsight.set(topic, { id: insight.id, title: insight.title })
+  }
+}
+
 export default function DataPage() {
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +54,7 @@ export default function DataPage() {
       <main className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/data" />
 
-        <div className="mt-8 mb-8 flex items-center gap-2.5">
+        <div className="mt-8 mb-6 flex items-center gap-2.5">
           <div className="flex size-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
             <Database className="size-4.5 text-blue-600 dark:text-blue-400" />
           </div>
@@ -198,20 +210,29 @@ export default function DataPage() {
             <div>
               <p className="mb-3 text-sm font-medium">User Interviews</p>
               <div className="space-y-3">
-                {interviews.map((iv, i) => (
-                  <div key={i} className="rounded-xl border bg-card p-4 ring-1 ring-foreground/10">
-                    <p className="text-sm italic leading-relaxed text-foreground/80">&ldquo;{iv.quote}&rdquo;</p>
-                    <div className="mt-2.5 flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">{iv.user}</span>
-                      <span className="text-xs text-muted-foreground">·</span>
-                      <span className="text-xs text-muted-foreground">{iv.date}</span>
-                      <Badge variant="secondary" className={`text-[10px] ${sentimentColor[iv.sentiment]}`}>
-                        {iv.sentiment}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px]">{iv.topic}</Badge>
+                {interviews.map((iv, i) => {
+                  const linkedInsight = topicToInsight.get(iv.topic)
+                  return (
+                    <div key={i} className="rounded-xl border bg-card p-4 ring-1 ring-foreground/10">
+                      <p className="text-sm italic leading-relaxed text-foreground/80">&ldquo;{iv.quote}&rdquo;</p>
+                      <div className="mt-2.5 flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{iv.user}</span>
+                        <span className="text-xs text-muted-foreground">·</span>
+                        <span className="text-xs text-muted-foreground">{iv.date}</span>
+                        <Badge variant="secondary" className={`text-[10px] ${sentimentColor[iv.sentiment]}`}>
+                          {iv.sentiment}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px]">{iv.topic}</Badge>
+                      </div>
+                      {linkedInsight && (
+                        <Link href="/analysis" className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-medium text-violet-700 transition-colors hover:bg-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:hover:bg-violet-900">
+                          <Sparkles className="size-2.5" />
+                          <span>→ Insight: {linkedInsight.title}</span>
+                        </Link>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
@@ -225,13 +246,25 @@ export default function DataPage() {
                 <div className="divide-y">
                   {supportThemes.map(t => {
                     const Icon = trendIcon[t.trend]
+                    // Match support theme to insight topics (approximate match by checking if theme contains a topic keyword)
+                    const linkedInsight = lifecycleInsights.find(ins =>
+                      ins.topics.some(topic => t.theme.toLowerCase().includes(topic.toLowerCase()))
+                    )
                     return (
-                      <div key={t.theme} className="flex items-center justify-between px-4 py-2.5">
-                        <span className="text-xs">{t.theme}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{t.tickets}</span>
-                          <Icon className={`size-3 ${trendColor[t.trend]}`} />
+                      <div key={t.theme} className="px-4 py-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs">{t.theme}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{t.tickets}</span>
+                            <Icon className={`size-3 ${trendColor[t.trend]}`} />
+                          </div>
                         </div>
+                        {linkedInsight && (
+                          <Link href="/analysis" className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-medium text-violet-700 transition-colors hover:bg-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:hover:bg-violet-900">
+                            <Sparkles className="size-2" />
+                            → {linkedInsight.title.split(" ").slice(0, 4).join(" ")}…
+                          </Link>
+                        )}
                       </div>
                     )
                   })}
@@ -259,6 +292,7 @@ export default function DataPage() {
             </div>
           </div>
         </section>
+
       </main>
     </div>
   )

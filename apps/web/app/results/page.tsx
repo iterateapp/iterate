@@ -2,11 +2,14 @@ import Link from "next/link"
 import { Header } from "@/components/dashboard/header"
 import { IterationLoop } from "@/components/dashboard/iteration-loop"
 import { Badge } from "@/components/ui/badge"
-import { experiments, features, type ExperimentStatus } from "@/lib/mock-data"
+import { experiments, features, repoInfo, type ExperimentStatus } from "@/lib/mock-data"
+import Image from "next/image"
 import {
   BarChart3,
   TrendingUp,
-  CornerDownLeft,
+  GitBranch,
+  FlaskConical,
+  Database,
 } from "lucide-react"
 
 const statusBadge: Record<ExperimentStatus, string> = {
@@ -31,13 +34,32 @@ export default function ResultsPage() {
       <main className="mx-auto max-w-[1200px] px-8 py-8">
         <IterationLoop currentHref="/results" />
 
-        <div className="mt-8 mb-8 flex items-center gap-2.5">
+        <div className="mt-8 mb-6 flex items-center gap-2.5">
           <div className="flex size-9 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900">
             <BarChart3 className="size-4.5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Results</h1>
             <p className="text-sm text-muted-foreground">A/B test outcomes & impact measurement — results feed back to Data</p>
+          </div>
+        </div>
+
+        {/* Repo context bar */}
+        <div className="mb-6 flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-2.5">
+          <div className="flex items-center gap-2 text-xs">
+            <FlaskConical className="size-3.5 text-muted-foreground" />
+            <span className="font-medium">Experiments</span>
+          </div>
+          <div className="h-3.5 w-px bg-border" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <GitBranch className="size-3" />
+            <span className="font-mono text-[11px]">{repoInfo.fullName}</span>
+          </div>
+          <div className="h-3.5 w-px bg-border" />
+          <span className="text-[11px] text-muted-foreground">{experiments.filter(e => e.status === "running").length} running on feature branches</span>
+          <div className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
+            <Image src="/logos/github.svg" alt="GitHub" width={14} height={14} className="dark:invert" />
+            GitHub
           </div>
         </div>
 
@@ -50,13 +72,6 @@ export default function ResultsPage() {
           ))}
         </div>
 
-        {/* Loop-back callout */}
-        <div className="mb-8 flex items-center gap-2 rounded-xl border border-dashed border-amber-300/60 bg-amber-50/30 px-4 py-3 dark:border-amber-800/60 dark:bg-amber-950/20">
-          <CornerDownLeft className="size-4 text-amber-500" />
-          <p className="text-xs text-muted-foreground">
-            Experiment results automatically feed back into <Link href="/data" className="font-medium text-foreground underline underline-offset-2">Data</Link> for the next iteration cycle.
-          </p>
-        </div>
 
         {/* ── Experiments ── */}
         <section className="mb-10">
@@ -73,6 +88,10 @@ export default function ResultsPage() {
                         <Badge variant="secondary" className={`text-[10px] ${statusBadge[exp.status]}`}>{exp.status}</Badge>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{exp.featureName} · Started {exp.startedAt}</p>
+                      <div className="mt-1.5 flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 w-fit">
+                        <GitBranch className="size-2.5 text-muted-foreground" />
+                        <span className="font-mono text-[10px] text-muted-foreground">{exp.branch}</span>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Significance</p>
@@ -117,6 +136,12 @@ export default function ResultsPage() {
                       })}
                     </div>
                   </div>
+                  {exp.status === "completed" && exp.significance >= 95 && (
+                    <Link href="/data" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900">
+                      <Database className="size-2.5" />
+                      <span>→ Fed back to Data — +{winner.change}% {exp.metric.toLowerCase()}</span>
+                    </Link>
+                  )}
                 </div>
               )
             })}
@@ -140,6 +165,13 @@ export default function ResultsPage() {
                           <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">Released</Badge>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">{f.description}</p>
+                        {relatedExp && (
+                          <div className="mt-1.5 flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 w-fit">
+                            <GitBranch className="size-2.5 text-muted-foreground" />
+                            <span className="font-mono text-[10px] text-muted-foreground">{relatedExp.branch}</span>
+                            <span className="text-[10px] text-muted-foreground/50">→ merged to main</span>
+                          </div>
+                        )}
                       </div>
                       {relatedExp && winningVariant && winningVariant.change > 0 && (
                         <div className="text-right">
@@ -157,6 +189,7 @@ export default function ResultsPage() {
             </div>
           </section>
         )}
+
       </main>
     </div>
   )
