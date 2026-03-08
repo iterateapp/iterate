@@ -1,103 +1,170 @@
 <mxfile host="app.diagrams.net" version="21.0.0">
   <diagram name="Monorepo Structure" id="monorepo-structure">
-    <mxGraphModel dx="1024" dy="768" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="900" pageHeight="620" math="0" shadow="0">
+    <mxGraphModel dx="1024" dy="768" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="800" pageHeight="580" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
         <mxCell id="title" value="Iterateモノレポ構成（Turborepo + pnpm workspaces）"
           style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=15;fontStyle=1;"
           vertex="1" parent="1">
-          <mxGeometry x="40" y="10" width="820" height="35" as="geometry"/>
+          <mxGeometry x="40" y="10" width="720" height="35" as="geometry"/>
         </mxCell>
+
+        <!-- Root -->
         <mxCell id="root" value="📦 iterate/ (monorepo root)&#xa;Turborepo + pnpm workspaces"
           style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;fontStyle=1;"
           vertex="1" parent="1">
-          <mxGeometry x="310" y="55" width="280" height="50" as="geometry"/>
+          <mxGeometry x="250" y="55" width="300" height="55" as="geometry"/>
         </mxCell>
+
+        <!-- Apps group -->
         <mxCell id="apps" value="apps/"
           style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=13;fontStyle=1;"
           vertex="1" parent="1">
-          <mxGeometry x="60" y="165" width="580" height="40" as="geometry"/>
+          <mxGeometry x="60" y="170" width="320" height="40" as="geometry"/>
         </mxCell>
+
+        <!-- Packages group -->
         <mxCell id="pkgs" value="packages/"
           style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=13;fontStyle=1;"
           vertex="1" parent="1">
-          <mxGeometry x="680" y="165" width="200" height="40" as="geometry"/>
+          <mxGeometry x="420" y="170" width="320" height="40" as="geometry"/>
         </mxCell>
+
+        <!-- Arrow root -> apps -->
         <mxCell id="ra" value=""
-          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;"
           edge="1" source="root" target="apps" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
+
+        <!-- Arrow root -> packages -->
         <mxCell id="rp" value=""
-          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.7;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;"
           edge="1" source="root" target="pkgs" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="d1" value="📁 discovery/&#xa;Phase 1: Insight検知&#xa;AI自動調査"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- App: discovery -->
+        <mxCell id="disc" value="📁 discovery/&#xa;Phase 1: 仮説生成Chat&#xa;Next.js App Router"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=10;align=left;spacingLeft=8;"
           vertex="1" parent="1">
-          <mxGeometry x="30" y="270" width="120" height="65" as="geometry"/>
+          <mxGeometry x="30" y="270" width="170" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d2" value="📁 research/&#xa;Phase 2: AIインタビュー&#xa;Recommendation生成"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- App: research / interview-agent -->
+        <mxCell id="ires" value="📁 interview-agent/&#xa;Phase 2: AIインタビュー&#xa;LiveKit Agent (Node.js)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=10;align=left;spacingLeft=8;"
           vertex="1" parent="1">
-          <mxGeometry x="165" y="270" width="120" height="65" as="geometry"/>
+          <mxGeometry x="215" y="270" width="170" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d3" value="📁 prd/&#xa;Phase 3: PRD自動生成&#xa;別サービス"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- App: web -->
+        <mxCell id="web" value="📁 web/&#xa;ダッシュボード + インタビューUI&#xa;Next.js (既存)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=10;align=left;spacingLeft=8;"
           vertex="1" parent="1">
-          <mxGeometry x="300" y="270" width="120" height="65" as="geometry"/>
+          <mxGeometry x="122" y="365" width="170" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d4" value="📁 action/&#xa;Phase 4: タスク生成&#xa;Linear/GitHub連携"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- App: action -->
+        <mxCell id="action" value="📁 action/&#xa;Phase 3: タスク生成&#xa;Linear API連携"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=10;align=left;spacingLeft=8;"
           vertex="1" parent="1">
-          <mxGeometry x="435" y="270" width="120" height="65" as="geometry"/>
+          <mxGeometry x="30" y="365" width="80" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d5" value="📁 experiment/&#xa;Phase 5: 実験追跡&#xa;Amplitude結果参照"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- Arrows apps -> children -->
+        <mxCell id="ad" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;"
+          edge="1" source="apps" target="disc" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ai" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;"
+          edge="1" source="apps" target="ires" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="aw" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;"
+          edge="1" source="apps" target="web" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="aa" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;"
+          edge="1" source="apps" target="action" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Package: shared -->
+        <mxCell id="shared" value="📁 shared/&#xa;TOMLスキーマ型定義&#xa;InterviewConfig, Results"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF9EE;strokeColor=#82B366;fontSize=10;align=left;spacingLeft=8;"
           vertex="1" parent="1">
-          <mxGeometry x="570" y="270" width="120" height="65" as="geometry"/>
+          <mxGeometry x="415" y="270" width="170" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d6" value="📁 web/&#xa;ダッシュボード&#xa;Next.js (既存)"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF3FB;strokeColor=#6C8EBF;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- Package: database -->
+        <mxCell id="db" value="📁 database/&#xa;Supabase client&#xa;マイグレーション・スキーマ"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF9EE;strokeColor=#82B366;fontSize=10;align=left;spacingLeft=8;"
           vertex="1" parent="1">
-          <mxGeometry x="165" y="365" width="120" height="60" as="geometry"/>
+          <mxGeometry x="600" y="270" width="170" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d7" value="📁 symphony/&#xa;Linearポーリング&#xa;コーディングエージェント (Elixir)"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- Package: toml-schema -->
+        <mxCell id="toml" value="📁 toml-schema/ (予定)&#xa;共通TOMLバリデーション"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF9EE;strokeColor=#82B366;fontSize=10;align=left;spacingLeft=8;dashed=1;"
           vertex="1" parent="1">
-          <mxGeometry x="300" y="365" width="155" height="60" as="geometry"/>
+          <mxGeometry x="508" y="365" width="170" height="55" as="geometry"/>
         </mxCell>
-        <mxCell id="aa1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="apps" target="d1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="aa2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="apps" target="d2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="aa3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="apps" target="d3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="aa4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="apps" target="d4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="aa5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="apps" target="d5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="aa6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="apps" target="d6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="aa7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="apps" target="d7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="p1" value="📁 db/&#xa;Prismaスキーマ&#xa;マイグレーション"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF9EE;strokeColor=#82B366;fontSize=9;align=left;spacingLeft=6;"
+
+        <!-- Arrows pkgs -> children -->
+        <mxCell id="ps" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;"
+          edge="1" source="pkgs" target="shared" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="pd" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;"
+          edge="1" source="pkgs" target="db" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="pt" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;dashed=1;"
+          edge="1" source="pkgs" target="toml" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Cross-dependency arrows (apps use packages) -->
+        <mxCell id="dep1" value="依存"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1;dashed=1;html=1;strokeColor=#9673A6;fontColor=#9673A6;fontSize=9;"
+          edge="1" source="ires" target="shared" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="460"/>
+              <mxPoint x="500" y="460"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="dep2" value="依存"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1;dashed=1;html=1;strokeColor=#9673A6;fontColor=#9673A6;fontSize=9;"
+          edge="1" source="ires" target="db" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="490"/>
+              <mxPoint x="685" y="490"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend: dashed = planned -->
+        <mxCell id="leg" value="破線 = 計画中（未実装）"
+          style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontStyle=2;"
           vertex="1" parent="1">
-          <mxGeometry x="680" y="270" width="120" height="65" as="geometry"/>
+          <mxGeometry x="40" y="455" width="200" height="20" as="geometry"/>
         </mxCell>
-        <mxCell id="p2" value="📁 types/&#xa;共通型定義&#xa;TypeScript"
-          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EBF9EE;strokeColor=#82B366;fontSize=9;align=left;spacingLeft=6;"
-          vertex="1" parent="1">
-          <mxGeometry x="815" y="270" width="110" height="65" as="geometry"/>
-        </mxCell>
-        <mxCell id="pp1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="pkgs" target="p1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="pp2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;" edge="1" source="pkgs" target="p2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="dbNote" value="⬇︎ 全アプリが共有PostgreSQL DBを通じて連携"
-          style="text;html=1;strokeColor=none;fillColor=#FFFACD;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;strokeColor=#DAA520;"
-          vertex="1" parent="1">
-          <mxGeometry x="60" y="455" width="640" height="30" as="geometry"/>
-        </mxCell>
-        <mxCell id="dbBox" value="🗄 PostgreSQL（Supabase / Neon）+ Prisma"
-          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;fontStyle=1;"
-          vertex="1" parent="1">
-          <mxGeometry x="225" y="500" width="440" height="65" as="geometry"/>
-        </mxCell>
+
       </root>
     </mxGraphModel>
   </diagram>

@@ -1,0 +1,153 @@
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="Service Architecture" id="service-arch">
+    <mxGraphModel dx="1024" dy="768" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1100" pageHeight="720" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="Iterateサービス間アーキテクチャ（TOMLインターフェース）"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="10" width="800" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Amplitude -->
+        <mxCell id="amp" value="Amplitude API&#xa;定量データ"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#FFE6CC;strokeColor=#D6B656;fontSize=11;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="160" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Amplitude -> Discovery arrow -->
+        <mxCell id="a0" value=""
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;"
+          edge="1" source="amp" target="disc" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Discovery (Phase 1) -->
+        <mxCell id="disc" value="Discovery — Phase 1&#xa;仮説生成&#xa;&#xa;• Amplitude連携&#xa;• AIとの壁打ちChat&#xa;• インタビュー設計"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;fontStyle=1;align=left;spacingLeft=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="250" y="130" width="220" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- hypothesis.toml arrow -->
+        <mxCell id="a1" value="hypothesis.toml"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontStyle=2;fontSize=11;labelBackgroundColor=#FFFFFF;"
+          edge="1" source="disc" target="res" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Research (Phase 2) -->
+        <mxCell id="res" value="Research — Phase 2&#xa;AIインタビュー&#xa;&#xa;• ユーザーに自動インタビュー&#xa;• LiveKit音声通話&#xa;• 定性データ集約・分析"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;fontStyle=1;align=left;spacingLeft=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="560" y="130" width="220" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- Human review bidirectional arrow -->
+        <mxCell id="hr" value="human review"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeWidth=1;dashed=1;html=1;fontSize=10;endArrow=block;startArrow=block;startFill=1;endFill=1;"
+          edge="1" source="disc" target="res" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="310"/>
+              <mxPoint x="670" y="310"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- results.toml arrow (vertical from Research to Action) -->
+        <mxCell id="a2" value="results.toml"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontStyle=2;fontSize=11;labelBackgroundColor=#FFFFFF;"
+          edge="1" source="res" target="act" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Action (Phase 3) -->
+        <mxCell id="act" value="Action — Phase 3&#xa;タスク生成&#xa;&#xa;• インタビュー結果分析&#xa;• RICEスコア算出&#xa;• Linear API連携"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;fontStyle=1;align=left;spacingLeft=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="560" y="400" width="220" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- Linear Tasks arrow -->
+        <mxCell id="a3" value="Linear Tasks"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=11;labelBackgroundColor=#FFFFFF;"
+          edge="1" source="act" target="lin" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Linear -->
+        <mxCell id="lin" value="Linear&#xa;タスク管理"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="840" y="430" width="160" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- poll arrow -->
+        <mxCell id="a4" value="poll"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;dashed=1;html=1;fontSize=11;"
+          edge="1" source="lin" target="sym" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Symphony -->
+        <mxCell id="sym" value="Symphony&#xa;コーディングエージェント"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="820" y="580" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- PR arrow -->
+        <mxCell id="a5" value="PR"
+          style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;html=1;fontSize=11;"
+          edge="1" source="sym" target="gh" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- GitHub -->
+        <mxCell id="gh" value="GitHub&#xa;PR → レビュー"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="560" y="590" width="180" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- TOML file icons (decorative labels) -->
+        <mxCell id="toml1" value="📄 hypothesis.toml&#xa;サービス間インターフェース"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFACD;strokeColor=#DAA520;fontSize=9;align=center;"
+          vertex="1" parent="1">
+          <mxGeometry x="390" y="175" width="170" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="toml2" value="📄 results.toml&#xa;サービス間インターフェース"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFACD;strokeColor=#DAA520;fontSize=9;align=center;"
+          vertex="1" parent="1">
+          <mxGeometry x="620" y="330" width="170" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Human in loop annotation boxes -->
+        <mxCell id="hil1" value="👤 PM承認"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeColor=#CC6600;fontColor=#FFFFFF;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="390" y="235" width="80" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="hil2" value="👤 PM承認"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeColor=#CC6600;fontColor=#FFFFFF;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="510" y="340" width="80" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="hil3" value="👤 PM承認"
+          style="ellipse;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeColor=#CC6600;fontColor=#FFFFFF;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="790" y="455" width="80" height="35" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

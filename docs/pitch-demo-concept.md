@@ -11,7 +11,7 @@
 コンセプト: AIが"何を作るべきか"を決める
 
 ユーザーデータ（定量）＋ユーザーインタビュー（定性）を統合し、
-課題発見 → 仕様 → 実装 → 実験まで自動化するPMツール。
+Insight検知 → AIインタビュー → PRD → タスク → 実験まで自動化するPMツール。
 
 ---
 
@@ -132,7 +132,7 @@ RICE風UI: Impact / Confidence / Effort
 AI Product Flywheel:
 
 ```
-Users → Data → AI Insight → Tasks → Code → Experiment → Users
+Users → Data → Insight → Interview → Recommendation → PRD → Tasks → Code → Experiment → Users
 ```
 
 Closed AI loop for product management
