@@ -34,13 +34,17 @@ help: ## Show this help
 	@echo ""
 
 .PHONY: setup
-setup: ## First-time project setup (install deps, setup db, copy env)
+setup: ## First-time project setup (install deps, setup db, seed data)
 	@echo "$(CYAN)▸ Setting up Iterate...$(RESET)"
 	@test -f .env || (cp .env.example .env && echo "  $(GREEN)✓$(RESET) Created .env from .env.example")
+	@test -f packages/database/.env || (cp packages/database/.env.example packages/database/.env && echo "  $(GREEN)✓$(RESET) Created packages/database/.env")
 	@$(PNPM) install
 	@$(MAKE) db-up
+	@sleep 2
 	@$(MAKE) db-push
-	@echo "$(GREEN)✓ Setup complete!$(RESET)"
+	@$(MAKE) db-generate
+	@$(MAKE) db-seed
+	@echo "$(GREEN)✓ Setup complete! Run 'make dev' to start.$(RESET)"
 
 .PHONY: install
 install: ## Install all dependencies
@@ -64,7 +68,7 @@ dev-symphony: ## Start only the Symphony backend
 
 .PHONY: build
 build: ## Build all packages and apps
-	@$(TURBO) build
+	@eval $$(grep -v '^\#' packages/database/.env | sed 's/^/export /' | sed "s/=\(.*\)/='\1'/") 2>/dev/null; $(TURBO) build --filter=web
 
 .PHONY: lint
 lint: ## Lint all packages and apps
@@ -90,7 +94,7 @@ clean: ## Remove all build artifacts and node_modules
 db-up: ## Start PostgreSQL via Docker Compose
 	@echo "$(CYAN)▸ Starting PostgreSQL...$(RESET)"
 	@$(DOCKER) up -d postgres
-	@echo "$(GREEN)✓ PostgreSQL running on :5432$(RESET)"
+	@echo "$(GREEN)✓ PostgreSQL running on :5433$(RESET)"
 
 .PHONY: db-down
 db-down: ## Stop PostgreSQL
@@ -112,6 +116,12 @@ db-generate: ## Generate Prisma client
 db-studio: ## Open Prisma Studio
 	@cd packages/database && $(PNPM) run db:studio
 
+.PHONY: db-seed
+db-seed: ## Seed database with demo data
+	@echo "$(CYAN)▸ Seeding database...$(RESET)"
+	@cd packages/database && $(PNPM) run db:seed
+	@echo "$(GREEN)✓ Database seeded$(RESET)"
+
 .PHONY: db-reset
 db-reset: ## Reset database (drop + recreate + seed)
 	@echo "$(RED)▸ Resetting database...$(RESET)"
@@ -119,6 +129,8 @@ db-reset: ## Reset database (drop + recreate + seed)
 	@$(MAKE) db-up
 	@sleep 2
 	@$(MAKE) db-push
+	@$(MAKE) db-generate
+	@$(MAKE) db-seed
 	@echo "$(GREEN)✓ Database reset complete$(RESET)"
 
 # ══════════════════════════════════════════════════════════════════════
