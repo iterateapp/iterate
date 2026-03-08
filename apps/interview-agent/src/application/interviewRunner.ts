@@ -1,303 +1,412 @@
 /**
- * Interview Runner
+ * Interview Runner — Controllable State Machine
  *
- * Orchestrates a voice-based interview session using LiveKit Agents.
- * Parses room metadata, creates STT/TTS/LLM adapters, runs the voice agent,
- * collects transcript, summarizes answers, and saves results to Supabase.
+ * Orchestrates a voice-based interview session using an explicit state machine:
+ *   GREETING → Q(N)_ASKING → Q(N)_WAITING → [Q(N)_FOLLOW_UP → Q(N)_FOLLOW_UP_WAITING] → ... → CLOSING → DONE
+ *
+ * GPT-4o-mini is used only for:
+ *   1. Deciding whether a follow-up question is needed (yes/no + follow-up text)
+ *   2. Summarizing each answer after the interview
+ *   3. Overall sentiment classification
  */
 
-import { voice, JobContext } from '@livekit/agents';
+import type { JobContext } from '@livekit/agents';
+import { voice } from '@livekit/agents';
 import { VAD } from '@livekit/agents-plugin-silero';
+import { PrismaClient } from '@iterate/db';
+import type { AgentJobMetadata, InterviewAnswer, InterviewQuestion } from '@iterate/types';
 import OpenAI from 'openai';
-import {
-  parseInterviewConfig,
-  stringifyInterviewResults,
-  type InterviewAnswer,
-  type InterviewConfig,
-} from '@iterate/shared';
-import { createDbClient } from '@iterate/database';
-import { FishTtsAdapter } from '../infrastructure/tts/FishTtsAdapter.js';
+import type { GoogleSttConfig } from '../infrastructure/stt/GoogleSttAdapter.js';
 import { GoogleSttAdapter } from '../infrastructure/stt/GoogleSttAdapter.js';
+import type { FishTtsConfig } from '../infrastructure/tts/FishTtsAdapter.js';
+import { FishTtsAdapter } from '../infrastructure/tts/FishTtsAdapter.js';
+import type { OpenAiLlmConfig } from '../infrastructure/llm/OpenAiLlmAdapter.js';
 import { OpenAiLlmAdapter } from '../infrastructure/llm/OpenAiLlmAdapter.js';
 import { env } from '../env.js';
 
-interface RoomMetadata {
-  sessionId: string;
+const prisma = new PrismaClient();
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+/** Per-question transcript collected during the interview */
+interface QuestionTranscript {
+  question: InterviewQuestion;
+  agentUtterances: string[];
+  userUtterances: string[];
+  followUpCount: number;
 }
 
-interface TranscriptEntry {
-  role: 'user' | 'assistant';
-  text: string;
-  timestamp: number;
-}
+// ---------------------------------------------------------------------------
+// Metadata parsing
+// ---------------------------------------------------------------------------
 
-/**
- * Build the system prompt for the interview agent.
- * Instructs the AI to ask questions in order, in Japanese.
- */
-function buildSystemPrompt(config: InterviewConfig): string {
-  const questionList = config.questions
-    .map((q, i) => `${i + 1}. [ID: ${q.id}] ${q.text}`)
-    .join('\n');
-
-  return `あなたは優秀なインタビュアーです。「${config.interview.interviewer_name}」として、以下の質問を順番に候補者に質問してください。
-
-インタビュータイトル: ${config.interview.title}
-
-【質問リスト】
-${questionList}
-
-【進め方のルール】
-- 質問は必ず上記の順番で行ってください。
-- 一度に一つの質問だけを行ってください。
-- 候補者が回答した後、次の質問に進んでください。
-- 候補者の回答に対して短い相槌や確認を入れてから次の質問へ進んでください。
-- すべての質問が終わったら、インタビューの終了を丁寧に告げてください。
-- 言語は日本語を使用してください。
-
-まず、自己紹介をして最初の質問から始めてください。`;
-}
-
-/**
- * Parse Google Cloud credentials from JSON string
- */
-function parseGoogleCredentials(): { client_email: string; private_key: string } | undefined {
+function parseJobMetadata(jobCtx: JobContext): AgentJobMetadata {
+  const raw = jobCtx.room.metadata ?? '{}';
+  let meta: AgentJobMetadata;
   try {
-    const creds = JSON.parse(env.GOOGLE_CLOUD_CREDENTIALS_JSON) as {
-      client_email?: string;
-      private_key?: string;
-    };
-    if (creds.client_email && creds.private_key) {
-      return { client_email: creds.client_email, private_key: creds.private_key };
-    }
-    return undefined;
-  } catch (err) {
-    throw new Error(`Failed to parse GOOGLE_CLOUD_CREDENTIALS_JSON: ${err instanceof Error ? err.message : String(err)}`);
+    meta = JSON.parse(raw) as AgentJobMetadata;
+  } catch {
+    throw new Error('[Interview] Failed to parse room metadata');
   }
+  if (!meta.interviewId || !Array.isArray(meta.questions)) {
+    throw new Error('[Interview] Invalid metadata: missing interviewId or questions');
+  }
+  return meta;
 }
 
+// ---------------------------------------------------------------------------
+// System prompt builders
+// ---------------------------------------------------------------------------
+
+function buildSystemPrompt(
+  meta: AgentJobMetadata,
+  currentQuestion: InterviewQuestion | null,
+  phase: 'greeting' | 'question' | 'follow_up' | 'closing',
+): string {
+  if (phase === 'greeting') {
+    return `あなたはプロのユーザーリサーチインタビュアーです。
+今からインタビューを始めます。まず自己紹介と今日のインタビューの目的を簡潔に説明してください。
+インタビューは ${meta.questions.length} 個の質問で構成されています。
+言語: ${meta.language === 'ja' ? '日本語' : meta.language}
+インタビュアー名: ${meta.interviewerName}
+最初の挨拶のみを行い、質問はまだしないでください。`;
+  }
+
+  if (phase === 'closing') {
+    return `インタビューが終了しました。参加者に感謝の言葉を伝え、インタビューを締めくくってください。簡潔にお願いします。`;
+  }
+
+  const phaseLabel = phase === 'follow_up' ? '深掘り' : '';
+  return `あなたはプロのユーザーリサーチインタビュアーです。
+現在の${phaseLabel}質問: 「${currentQuestion?.text}」
+ユーザーの回答に対して自然な相槌を打ち、必要であれば回答を引き出す一言を添えてください。
+新しい質問は絶対にしないでください。相槌は短く（1〜2文）にしてください。`;
+}
+
+// ---------------------------------------------------------------------------
+// GPT-4o-mini helpers
+// ---------------------------------------------------------------------------
+
 /**
- * Summarize a user's answers for a specific question using GPT-4o.
+ * Decide whether a follow-up question is warranted.
+ * Returns the follow-up question text, or null if the answer is sufficient.
  */
-async function summarizeAnswer(
+async function decideFollowUp(
   openai: OpenAI,
-  question: string,
-  transcript: string,
-): Promise<string> {
-  if (!transcript.trim()) {
-    return '（回答なし）';
-  }
+  question: InterviewQuestion,
+  userResponse: string,
+): Promise<string | null> {
+  if (!userResponse.trim() || userResponse.length < 10) return null;
 
-  try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content:
-            '以下のインタビュー回答を200文字以内で要約してください。要点を簡潔にまとめてください。',
-        },
-        {
-          role: 'user',
-          content: `質問: ${question}\n\n回答の書き起こし:\n${transcript}`,
-        },
-      ],
-      max_tokens: 300,
-      temperature: 0.3,
-    });
+  const res = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content: `ユーザーリサーチのインタビューで、以下の回答がありました。\n\n質問: ${question.text}\n回答: ${userResponse}\n\nこの回答は十分に詳しいですか？もっと掘り下げる必要がある場合は、具体的な深掘り質問を1つ生成してください。十分な場合は "SUFFICIENT" とだけ答えてください。`,
+      },
+    ],
+    max_tokens: 150,
+  });
 
-    return completion.choices[0]?.message?.content?.trim() ?? '（要約失敗）';
-  } catch (error) {
-    console.error('GPT-4o summarization error:', error instanceof Error ? error.message : String(error));
-    return '（要約エラー）';
-  }
+  const answer = res.choices[0]?.message.content?.trim() ?? 'SUFFICIENT';
+  if (answer === 'SUFFICIENT' || answer.startsWith('SUFFICIENT')) return null;
+  return answer;
 }
 
 /**
- * Extract user transcript segments that likely answer each question.
- * Groups user messages into answer segments based on question order.
+ * Summarize the user's utterances for one question into a concise Japanese summary.
  */
-function extractAnswerTranscripts(
-  transcript: TranscriptEntry[],
-  config: InterviewConfig,
-): string[] {
-  // Collect all user speech segments
-  const userSegments = transcript
-    .filter((e) => e.role === 'user')
-    .map((e) => e.text);
+async function summarizeAnswer(openai: OpenAI, qt: QuestionTranscript): Promise<string> {
+  const userText = qt.userUtterances.join(' ');
+  if (!userText.trim()) return '回答なし';
 
-  // Distribute user segments evenly across questions
-  const numQuestions = config.questions.length;
-  const segmentsPerQuestion = Math.ceil(userSegments.length / Math.max(numQuestions, 1));
-
-  return config.questions.map((_, i) => {
-    const start = i * segmentsPerQuestion;
-    const end = start + segmentsPerQuestion;
-    return userSegments.slice(start, end).join('\n');
+  const res = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content: `以下のユーザーインタビュー回答を、150文字以内で簡潔に要約してください。\n\n質問: ${qt.question.text}\n回答: ${userText}\n\n要約:`,
+      },
+    ],
+    max_tokens: 200,
   });
+
+  return res.choices[0]?.message.content?.trim() ?? userText.slice(0, 150);
 }
+
+/**
+ * Build a readable transcript string interleaving agent and user utterances.
+ */
+function buildFullTranscript(qt: QuestionTranscript): string {
+  const lines: string[] = [];
+  const maxLen = Math.max(qt.agentUtterances.length, qt.userUtterances.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (qt.agentUtterances[i]) lines.push(`Agent: ${qt.agentUtterances[i]}`);
+    if (qt.userUtterances[i]) lines.push(`User: ${qt.userUtterances[i]}`);
+  }
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Main entry point
+// ---------------------------------------------------------------------------
 
 /**
  * Main interview runner — called as the LiveKit agent entry point.
+ *
+ * Uses an explicit state machine rather than relying on the LLM to advance
+ * through questions autonomously.
  */
 export async function runInterview(jobCtx: JobContext): Promise<void> {
-  const startTime = Date.now();
+  const meta = parseJobMetadata(jobCtx);
+  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
-  // 1. Parse room metadata to get sessionId and configToml
-  const rawMetadata = jobCtx.room.metadata ?? '{}';
-  let metadata: RoomMetadata;
+  // --- Build adapters ---
+  let googleCredentials: { client_email: string; private_key: string } | undefined;
   try {
-    metadata = JSON.parse(rawMetadata) as RoomMetadata;
-  } catch {
-    throw new Error(`Invalid room metadata JSON: ${rawMetadata}`);
+    googleCredentials = JSON.parse(env.GOOGLE_CLOUD_CREDENTIALS_JSON) as {
+      client_email: string;
+      private_key: string;
+    };
+  } catch (err) {
+    throw new Error(
+      `Failed to parse GOOGLE_CLOUD_CREDENTIALS_JSON: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 
-  const { sessionId } = metadata;
-  if (!sessionId) {
-    throw new Error('Room metadata must contain sessionId');
-  }
-
-  console.log(`[InterviewRunner] Starting session ${sessionId}`);
-
-  // 2. Fetch configToml from Supabase
-  const db = createDbClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-  const sessionRecord = await db.getSession(sessionId);
-  if (!sessionRecord) {
-    console.error(`[Interview] Session not found: ${sessionId}`);
-    return;
-  }
-  const configToml = sessionRecord.config_toml;
-
-  // 3. Parse TOML config and build system prompt
-  const config: InterviewConfig = parseInterviewConfig(configToml);
-  const systemPrompt = buildSystemPrompt(config);
-
-  // 4. Create adapters
-  const googleCredentials = parseGoogleCredentials();
-  const sttAdapter = new GoogleSttAdapter({
-    languageCode: config.interview.language ?? 'ja-JP',
+  const sttConfig: GoogleSttConfig = {
+    languageCode: meta.language === 'ja' ? 'ja-JP' : meta.language,
     sampleRate: 16000,
     credentials: googleCredentials,
-  });
+  };
+  const stt = new GoogleSttAdapter(sttConfig);
 
-  const ttsAdapter = new FishTtsAdapter({
+  const ttsConfig: FishTtsConfig = {
     apiKey: env.FISH_AUDIO_API_KEY,
     referenceId: env.FISH_AUDIO_REFERENCE_ID,
     model: env.FISH_AUDIO_MODEL,
-    sampleRate: 44100,
-    latency: 'normal',
+    sampleRate: 24000,
+    latency: 'balanced',
     speed: 1.0,
-  });
+  };
+  const tts = new FishTtsAdapter(ttsConfig);
 
-  const llmAdapter = new OpenAiLlmAdapter({
+  const llmConfig: OpenAiLlmConfig = {
     apiKey: env.OPENAI_API_KEY,
     model: 'gpt-4o',
     temperature: 0.7,
-  });
+  };
+  const llm = new OpenAiLlmAdapter(llmConfig);
 
-  // 4. Load VAD from silero
   const vad = await VAD.load();
+  const startTime = Date.now();
 
-  // 5. Create Agent with the adapters and system prompt
-  const agent = new voice.Agent({
-    instructions: systemPrompt,
-    stt: sttAdapter,
-    vad,
-    llm: llmAdapter,
-    tts: ttsAdapter,
-  });
+  // --- Per-question transcript storage ---
+  const questionTranscripts: QuestionTranscript[] = meta.questions.map((q) => ({
+    question: q,
+    agentUtterances: [],
+    userUtterances: [],
+    followUpCount: 0,
+  }));
 
-  // 6. Connect to room and wait for participant
+  // State machine bookkeeping
+  let currentQuestionIndex = -1; // -1 = greeting/closing phase
+  let waitingForUser = false;
+
+  // --- Connect and wait for participant ---
   await jobCtx.connect();
-  console.log(`[InterviewRunner] Connected to room. Waiting for participant...`);
-  await jobCtx.waitForParticipant();
-  console.log(`[InterviewRunner] Participant joined.`);
+  const participant = await jobCtx.waitForParticipant();
+  console.log(`[Interview] Participant joined: ${participant.identity}`);
 
-  // 7. Collect transcription entries via session events
-  const transcript: TranscriptEntry[] = [];
+  // --- Create initial agent (greeting phase) ---
+  const createAgent = (phase: 'greeting' | 'question' | 'follow_up' | 'closing', qIndex: number) =>
+    new voice.Agent({
+      instructions: buildSystemPrompt(
+        meta,
+        qIndex >= 0 ? meta.questions[qIndex] ?? null : null,
+        phase,
+      ),
+      stt,
+      vad,
+      llm,
+      tts,
+    });
 
-  // 8. Start the agent session (VAD only — adapters are wired into the Agent, not duplicated here)
-  const session = new voice.AgentSession({
-    vad,
-  });
+  const session = new voice.AgentSession({ vad });
 
-  // Listen for transcription events before starting
-  session.on(
-    voice.AgentSessionEventTypes.UserInputTranscribed,
-    (ev: voice.UserInputTranscribedEvent) => {
-      if (ev.isFinal && ev.transcript.trim()) {
-        console.log(`[Transcript/User] ${ev.transcript}`);
-        transcript.push({
-          role: 'user',
-          text: ev.transcript,
-          timestamp: Date.now(),
-        });
-      }
-    },
-  );
-
+  // --- Event listeners ---
   session.on(
     voice.AgentSessionEventTypes.ConversationItemAdded,
     (ev: voice.ConversationItemAddedEvent) => {
-      if (ev.item.role === 'assistant' && ev.item.textContent) {
-        console.log(`[Transcript/Agent] ${ev.item.textContent}`);
-        transcript.push({
-          role: 'assistant',
-          text: ev.item.textContent,
-          timestamp: Date.now(),
-        });
+      const text = ev.item.textContent ?? '';
+      if (!text) return;
+
+      if (ev.item.role === 'assistant') {
+        if (currentQuestionIndex >= 0 && currentQuestionIndex < questionTranscripts.length) {
+          questionTranscripts[currentQuestionIndex].agentUtterances.push(text);
+        }
+        console.log(`[Transcript/Agent] ${text}`);
       }
     },
   );
 
-  // 9. Start the agent and wait for session close
-  await session.start({ agent, room: jobCtx.room });
+  session.on(
+    voice.AgentSessionEventTypes.UserInputTranscribed,
+    (ev: voice.UserInputTranscribedEvent) => {
+      if (!ev.isFinal || !ev.transcript.trim()) return;
+      console.log(`[Transcript/User] ${ev.transcript}`);
 
-  await new Promise<void>((resolve) => {
-    session.on(voice.AgentSessionEventTypes.Close, (ev: voice.CloseEvent) => {
-      console.log(`[InterviewRunner] Session closed: ${ev.reason}`);
-      resolve();
-    });
-  });
-
-  const durationSeconds = Math.round((Date.now() - startTime) / 1000);
-  console.log(`[InterviewRunner] Session ended after ${durationSeconds}s`);
-
-  // 10. Summarize answers using GPT-4o
-  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-  const answerTranscripts = extractAnswerTranscripts(transcript, config);
-
-  const answers: InterviewAnswer[] = await Promise.all(
-    config.questions.map(async (q, i) => {
-      const fullTranscript = answerTranscripts[i] ?? '';
-      const answerSummary = await summarizeAnswer(openai, q.text, fullTranscript);
-      return {
-        question_id: q.id,
-        question: q.text,
-        answer_summary: answerSummary,
-        full_transcript: fullTranscript,
-      };
-    }),
+      if (waitingForUser && currentQuestionIndex >= 0 && currentQuestionIndex < questionTranscripts.length) {
+        questionTranscripts[currentQuestionIndex].userUtterances.push(ev.transcript.trim());
+      }
+    },
   );
 
-  // 11. Build results TOML
-  const resultToml = stringifyInterviewResults({
-    session: {
-      session_id: sessionId,
-      title: config.interview.title,
-      completed_at: new Date().toISOString(),
-      duration_seconds: durationSeconds,
-    },
-    answers,
-  });
+  // --- Start agent session ---
+  await session.start({ agent: createAgent('greeting', -1), room: jobCtx.room });
 
-  // 12. Save to Supabase
+  // --- Helpers ---
+  const waitMs = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+  /**
+   * Ask the agent to say something explicitly and wait for it to finish playing.
+   */
+  const agentSay = async (text: string): Promise<void> => {
+    const handle = session.say(text, { allowInterruptions: false, addToChatCtx: true });
+    await handle.waitForPlayout();
+  };
+
+  /**
+   * Listen for user utterances for up to `listenMs` milliseconds.
+   * Returns the concatenated final transcript segments received during that window.
+   */
+  const collectResponse = async (listenMs = 15000): Promise<string> => {
+    waitingForUser = true;
+    await waitMs(listenMs);
+    waitingForUser = false;
+
+    if (currentQuestionIndex >= 0 && currentQuestionIndex < questionTranscripts.length) {
+      return questionTranscripts[currentQuestionIndex].userUtterances
+        .slice(-10) // only consider recently added utterances — accumulate per-question
+        .join(' ')
+        .trim();
+    }
+    return '';
+  };
+
+  // ===========================================================================
+  // State machine
+  // ===========================================================================
+
+  // ---- Phase 1: GREETING ----
+  console.log('[Interview] Phase: GREETING');
+  // The agent auto-generates a greeting based on system instructions on start.
+  // Give it time to finish greeting before moving to questions.
+  await waitMs(8000);
+
+  // ---- Phase 2: QUESTIONS ----
+  for (let i = 0; i < meta.questions.length; i++) {
+    currentQuestionIndex = i;
+    const qt = questionTranscripts[i];
+    const questionNumber = i + 1;
+    console.log(`[Interview] Phase: QUESTION ${questionNumber}/${meta.questions.length} — ${qt.question.text}`);
+
+    // Switch agent to question-phase instructions
+    session.updateAgent(createAgent('question', i));
+
+    // Ask the question explicitly via session.say()
+    await agentSay(qt.question.text);
+    await waitMs(500);
+
+    // Listen for user response (up to 30s)
+    const userResponse = await collectResponse(30000);
+    console.log(`[Interview] Q${questionNumber} user response (${userResponse.length} chars)`);
+
+    // Optionally run one follow-up (max 1 per question)
+    if (userResponse.length > 0) {
+      const followUpText = await decideFollowUp(openai, qt.question, userResponse);
+      if (followUpText) {
+        qt.followUpCount++;
+        console.log(`[Interview] Phase: QUESTION ${questionNumber} FOLLOW-UP`);
+        session.updateAgent(createAgent('follow_up', i));
+
+        await agentSay(followUpText);
+        await waitMs(500);
+        await collectResponse(20000);
+      }
+    }
+  }
+
+  // ---- Phase 3: CLOSING ----
+  currentQuestionIndex = -1;
+  console.log('[Interview] Phase: CLOSING');
+  session.updateAgent(createAgent('closing', -1));
+  await agentSay(
+    '以上で全ての質問が終わりました。本日はお時間をいただき、ありがとうございました。',
+  );
+  await waitMs(3000);
+
+  const durationSec = Math.round((Date.now() - startTime) / 1000);
+  console.log(`[Interview] Session ended after ${durationSec}s`);
+
+  // ---- Close session ----
+  await session.close();
+
+  // ===========================================================================
+  // Post-processing: summarize answers and save to DB
+  // ===========================================================================
+
+  const answers: InterviewAnswer[] = await Promise.all(
+    questionTranscripts.map(async (qt) => ({
+      questionId: qt.question.id,
+      question: qt.question.text,
+      answerSummary: await summarizeAnswer(openai, qt),
+      fullTranscript: buildFullTranscript(qt),
+      followUpCount: qt.followUpCount,
+    })),
+  );
+
+  // Overall sentiment based on all answer summaries
+  const allText = answers.map((a) => a.answerSummary).join(' ');
+  const sentimentRes = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content: `以下のインタビュー回答全体のセンチメントを "positive" / "neutral" / "negative" の1単語で答えてください。\n${allText}`,
+      },
+    ],
+    max_tokens: 10,
+  });
+  const sentiment = sentimentRes.choices[0]?.message.content?.trim() ?? 'neutral';
+
+  // Save to database
   try {
-    await db.saveResults(sessionId, resultToml);
-    console.log(`[Interview] Results saved for session ${sessionId}`);
+    await prisma.interviewResponse.create({
+      data: {
+        interviewId: meta.interviewId,
+        respondentId: participant.identity,
+        answers: answers as object[],
+        sentiment,
+        durationSec,
+      },
+    });
+
+    await prisma.interview.update({
+      where: { id: meta.interviewId },
+      data: {
+        responseCount: { increment: 1 },
+        status: 'COMPLETED',
+      },
+    });
+
+    console.log(`[Interview] Saved InterviewResponse for interview ${meta.interviewId}`);
   } catch (err) {
-    console.error(`[Interview] CRITICAL: Failed to save results for session ${sessionId}:`, err);
-    console.error('[Interview] Raw results TOML (for manual recovery):\n', resultToml);
-    throw err; // Re-throw so the agent framework logs it as a failed job
+    console.error(`[Interview] CRITICAL: Failed to save results for ${meta.interviewId}:`, err);
+    console.error('[Interview] Raw answers (for manual recovery):', JSON.stringify(answers, null, 2));
+    throw err;
   }
 }
