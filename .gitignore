@@ -41,3 +41,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.worktrees/
+
+# elixir (apps/symphony)
+apps/symphony/_build/
+apps/symphony/deps/
+apps/symphony/bin/
+apps/symphony/log/
+apps/symphony/erl_crash.dump
